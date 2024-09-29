@@ -1,12 +1,12 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Clock, Star, Search, Plus } from '@tamagui/lucide-icons';
+import { Clock, Star, Search, Settings } from '@tamagui/lucide-icons';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarStyle: { height: 50 },
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -31,10 +31,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="new-entry"
+        name="settings"
         options={{
-          title: 'New Entry',
-          tabBarIcon: ({ color }) => <Plus color={color} />,
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <Settings color={color} />,
         }}
       />
     </Tabs>

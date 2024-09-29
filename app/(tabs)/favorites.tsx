@@ -7,9 +7,6 @@ export default function FavoritesScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text fontSize="$8" fontWeight="bold" marginBottom="$4">
-          Favorite Dreams
-        </Text>
         <NoteList />
       </View>
     </SafeAreaView>

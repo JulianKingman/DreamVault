@@ -1,27 +1,17 @@
 import React from 'react';
-import { StyleSheet, SafeAreaView, View } from 'react-native';
-import { Text } from 'tamagui';
+import { SafeAreaView } from 'react-native';
 import { NoteList } from '../../components/NoteList';
+import { getDreams, addDream, updateDream } from '../../utils/database';
 
-export default function RecentScreen() {
+export default function HomeScreen() {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text fontSize="$8" fontWeight="bold" marginBottom="$4">
-          Recent Dreams
-        </Text>
-        <NoteList />
-      </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      <NoteList
+        dreams={getDreams()}
+        onSelectDream={console.log} // Temporary, replace with actual navigation logic
+        onAddDream={addDream}
+        onUpdateDream={updateDream}
+      />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-});

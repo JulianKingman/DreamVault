@@ -31,9 +31,6 @@ export default function SearchScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <YStack space="$4" style={styles.container}>
-        <Text fontSize="$8" fontWeight="bold">
-          Search Dreams
-        </Text>
         <CustomInput
           ref={inputRef}
           placeholder="Enter search query"
