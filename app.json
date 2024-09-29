@@ -13,13 +13,15 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.buishi.dreamvault"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.buishi.dreamvault"
     },
     "web": {
       "bundler": "metro",
@@ -27,10 +29,34 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "newArchEnabled": true
+          },
+          "android": {
+            "newArchEnabled": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c0b44b5c-c8cf-4cfe-b933-59ff0cb4128f"
+      }
+    },
+    "install": {
+      "exclude": [
+        "react-native@~0.74.0",
+        "react-native-reanimated@~3.10.0",
+        "react-native-gesture-handler@~2.16.1",
+        "react-native-screens@~3.31.1"
+      ]
     }
   }
 }
