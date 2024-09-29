@@ -1,11 +1,11 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native';
-import { NoteList } from '../../components/NoteList';
+import { NewDreamForm } from '../components/NewDreamForm';
 
-export default function HomeScreen() {
+export default function NewDreamScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <NoteList searchForm />
+      <NewDreamForm />
     </SafeAreaView>
   );
 }

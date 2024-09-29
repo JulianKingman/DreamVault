@@ -1,6 +1,7 @@
 export interface Dream {
-  id: string;
+  id: number;
   dateCreated: Date;
   dateModified: Date;
   content: string;
+  isFavorite: boolean;
 }
