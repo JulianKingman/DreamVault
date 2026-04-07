@@ -1,43 +1,42 @@
-import React, { useEffect } from 'react';
-import 'expo-dev-client';
+import React from 'react';
 import { Stack } from 'expo-router';
 import { TamaguiProvider, Theme } from 'tamagui';
 import { useFonts } from 'expo-font';
-import { SafeAreaView, StyleSheet, useColorScheme, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Plus } from '@tamagui/lucide-icons';
 import { useRouter, usePathname } from 'expo-router';
-import '../tamagui-web.css';
-import config from '../tamagui.config';
-import { initDatabase } from '../utils/database';
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
 } from '@react-navigation/native';
+import '../tamagui-web.css';
+import config from '../tamagui.config';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { LockScreen } from '../components/LockScreen';
 
-export default function RootLayout() {
-  const [loaded] = useFonts({
-    Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
-    InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
-  });
-
+function AppContent() {
   const colorScheme = useColorScheme();
-
+  const themeName = colorScheme ?? 'light';
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    initDatabase();
-  }, []);
-
-  if (!loaded) {
-    return null;
+  if (!isAuthenticated) {
+    return (
+      <TamaguiProvider config={config} defaultTheme={themeName}>
+        <Theme name={themeName}>
+          <LockScreen />
+        </Theme>
+      </TamaguiProvider>
+    );
   }
 
   return (
-    <TamaguiProvider config={config} defaultTheme={colorScheme ?? 'light'}>
+    <TamaguiProvider config={config} defaultTheme={themeName}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Theme name={colorScheme ?? 'light'}>
+        <Theme name={themeName}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen
@@ -59,6 +58,25 @@ export default function RootLayout() {
         </Theme>
       </ThemeProvider>
     </TamaguiProvider>
+  );
+}
+
+export default function RootLayout() {
+  const [loaded] = useFonts({
+    Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
+    InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
+  });
+
+  if (!loaded) {
+    return null;
+  }
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
 

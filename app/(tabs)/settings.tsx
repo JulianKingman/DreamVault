@@ -15,12 +15,12 @@ import {
   ScrollView,
 } from 'tamagui';
 import {
-  Settings,
   Import,
   Github,
   Moon,
   Info,
   ExternalLink,
+  Shield,
 } from '@tamagui/lucide-icons';
 
 export default function SettingsScreen() {
@@ -65,6 +65,20 @@ export default function SettingsScreen() {
                 />
               }
             />
+          </SettingsGroup>
+
+          <SettingsGroup title="Security">
+            <SettingsItem
+              icon={<Shield size={20} />}
+              title="Encryption"
+              right={<Text color="$gray10" fontSize="$3">AES-256 (Always On)</Text>}
+            />
+            <XStack paddingHorizontal="$4" paddingBottom="$3">
+              <Text fontSize="$2" color="$gray10">
+                Your dream journal is encrypted on-device with AES-256 via SQLCipher.
+                Biometric authentication is required to access your data.
+              </Text>
+            </XStack>
           </SettingsGroup>
 
           <SettingsGroup title="Data">
