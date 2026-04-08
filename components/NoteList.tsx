@@ -92,7 +92,7 @@ export function NoteList({
         renderRightActions={() => renderRightActions(item.id)}
         overshootRight={false}
       >
-        <Link href={`/view-dream?dreamId=${item.id}`}>
+        <Link href={`/view-dream?dreamId=${item.id}`} asChild>
           <YStack
             backgroundColor="$backgroundStrong"
             borderRadius={20}

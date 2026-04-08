@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Sparkles, Star, Search, Settings } from '@tamagui/lucide-icons';
+import { Sparkles, Bookmark, Search, Settings } from '@tamagui/lucide-icons';
 import { FloatingTabBar } from '../../components/FloatingTabBar';
 
 export default function TabLayout() {
@@ -22,7 +22,7 @@ export default function TabLayout() {
         name="favorites"
         options={{
           title: 'Favorites',
-          tabBarIcon: ({ color, size }) => <Star color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Bookmark color={color} size={size} />,
         }}
       />
       <Tabs.Screen

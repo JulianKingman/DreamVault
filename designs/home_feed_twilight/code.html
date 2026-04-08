@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error-container": "#7e2b17",
+                    "tertiary-container": "#f8a010",
+                    "on-primary-fixed": "#633300",
+                    "on-secondary-fixed-variant": "#4e5c71",
+                    "on-secondary-fixed": "#324053",
+                    "surface-container-highest": "#00264e",
+                    "on-error-container": "#ff9b82",
+                    "on-surface-variant": "#89ace7",
+                    "primary-fixed-dim": "#ffcaa1",
+                    "outline-variant": "#21487d",
+                    "primary": "#ffb77d",
+                    "error": "#ed7f64",
+                    "secondary-container": "#2e3c4f",
+                    "on-tertiary-fixed-variant": "#563400",
+                    "on-background": "#dae6ff",
+                    "on-primary-fixed-variant": "#8c4a00",
+                    "on-tertiary-container": "#4a2c00",
+                    "surface-container-low": "#02132c",
+                    "background": "#040e1f",
+                    "secondary-fixed-dim": "#c7d5ed",
+                    "secondary": "#909fb5",
+                    "primary-dim": "#ffa454",
+                    "inverse-primary": "#914d00",
+                    "on-secondary": "#122133",
+                    "surface-tint": "#ffb77d",
+                    "surface": "#040e1f",
+                    "surface-dim": "#040e1f",
+                    "inverse-on-surface": "#4a5569",
+                    "on-surface": "#dae6ff",
+                    "tertiary-fixed": "#f8a010",
+                    "on-primary": "#643400",
+                    "tertiary": "#ffb148",
+                    "on-tertiary-fixed": "#2a1700",
+                    "inverse-surface": "#f9f9ff",
+                    "primary-container": "#6e3900",
+                    "surface-variant": "#00264e",
+                    "surface-container": "#001938",
+                    "surface-bright": "#002c5a",
+                    "outline": "#5376ae",
+                    "primary-fixed": "#ffdcc3",
+                    "surface-container-lowest": "#000000",
+                    "tertiary-dim": "#e79400",
+                    "secondary-fixed": "#d5e3fc",
+                    "secondary-dim": "#909fb5",
+                    "on-tertiary": "#573500",
+                    "tertiary-fixed-dim": "#e79400",
+                    "error-dim": "#ba573f",
+                    "on-secondary-container": "#b2c0d8",
+                    "on-primary-container": "#ffc497",
+                    "on-error": "#450900",
+                    "surface-container-high": "#001f43"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Serif"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background: radial-gradient(circle at top right, #1a2a44 0%, #040e1f 60%);
+            min-height: 100vh;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(0, 25, 56, 0.4);
+            backdrop-filter: blur(20px);
+        }
+        .floating-action-gradient {
+            background: linear-gradient(135deg, #ffb77d 0%, #6e3900 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body text-on-surface antialiased overflow-x-hidden">
+<!-- Background Atmospheric Glow -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden">
+<div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 blur-[120px] rounded-full"></div>
+<div class="absolute bottom-1/4 -left-48 w-[500px] h-[500px] bg-secondary-container/10 blur-[150px] rounded-full"></div>
+</div>
+<!-- Main Content Feed -->
+<main class="relative z-10 max-w-2xl mx-auto px-6 pt-12 pb-32">
+<!-- Hero Editorial Moment -->
+<header class="mb-16">
+<h1 class="font-headline text-display-lg text-on-surface leading-tight tracking-tight -ml-1">
+                Quiet <br/> <span class="italic text-primary/80">Reflections.</span>
+</h1>
+<p class="font-body text-secondary mt-4 max-w-sm">A curated flow of thoughts captured in the shifting light of the evening.</p>
+</header>
+<!-- Feed Content -->
+<div class="space-y-12">
+<!-- Standard Row Excerpt -->
+<article class="group cursor-pointer">
+<div class="surface-container-low p-8 rounded-xl transition-all duration-500 group-hover:surface-container-high">
+<p class="font-headline text-2xl leading-relaxed text-on-surface/90">
+                        The way the shadows lengthen across the cedar deck always feels like a slow, deep breath taken by the world itself.
+                    </p>
+<div class="mt-6 flex flex-wrap gap-2">
+<span class="bg-secondary-container/30 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-secondary uppercase">Twilight</span>
+<span class="bg-secondary-container/30 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-secondary uppercase">Solitude</span>
+</div>
+</div>
+</article>
+<!-- Image Row Excerpt -->
+<article class="group cursor-pointer">
+<div class="relative h-[480px] rounded-xl overflow-hidden mb-6">
+<img alt="Twilight Horizon" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="cinematic wide shot of a misty forest at dusk with deep orange horizon glowing through silhouetted pine trees" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCD6Ar1Y4te928VFzo5WM3CacSnuS9qc1MXQHzuMWTEAiW3gGJM8DuRROinrtRbOPr32wapPp7-WKWm00j2SGLzYu8Tmkvt2CdwzPRNcll_Jl1OhZVrSja2z8pIYQhfI0aR4rwPQDlARS5mZz7xYrX7g0GDwX4kwRWfje5CBPG5TDLyyDfDiqkKpqg6TAf8BUUCBUtiuuH1PCmyCrzU4_NwrxzD86ColkWnYrfnhQPEGT17VgST1BvlBanaQvi9-YRQ2RLGI5a1u4sg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-8 w-full">
+<p class="font-headline text-2xl leading-relaxed text-on-surface mb-6">
+                            Some colors only exist in that brief window between the sun vanishing and the stars claiming the sky.
+                        </p>
+<div class="flex flex-wrap gap-2">
+<span class="bg-primary/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-primary uppercase">Ethereal</span>
+<span class="bg-primary/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-primary uppercase">Golden Hour</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Bento Layout Excerpts -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<article class="surface-container rounded-xl p-8 flex flex-col justify-between min-h-[280px]">
+<p class="font-body text-lg leading-relaxed text-on-surface/80">
+                        The scent of rain on dry pavement—the petrichor of an ending summer.
+                    </p>
+<div class="mt-8 flex gap-2">
+<span class="bg-secondary-container/30 px-3 py-1 rounded-full text-[10px] font-bold text-secondary uppercase tracking-widest">Atmosphere</span>
+</div>
+</article>
+<article class="surface-container-high rounded-xl p-8 flex flex-col justify-between min-h-[280px]">
+<p class="font-body text-lg leading-relaxed text-on-surface/80">
+                        Coffee has a different resonance when sipped in a room lit only by the blue hour.
+                    </p>
+<div class="mt-8 flex gap-2">
+<span class="bg-secondary-container/30 px-3 py-1 rounded-full text-[10px] font-bold text-secondary uppercase tracking-widest">Ritual</span>
+</div>
+</article>
+</div>
+<!-- Another Text Excerpt -->
+<article class="group cursor-pointer">
+<div class="surface-container-low p-8 rounded-xl transition-all duration-500 group-hover:surface-container">
+<p class="font-headline text-2xl leading-relaxed text-on-surface/90">
+                        Silence isn't empty; it's heavy with the things we haven't found the words for yet.
+                    </p>
+<div class="mt-6 flex flex-wrap gap-2">
+<span class="bg-secondary-container/30 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-secondary uppercase">Introspection</span>
+</div>
+</div>
+</article>
+</div>
+</main>
+<!-- Voice Input FAB (Prominent Mic) -->
+<div class="fixed bottom-28 right-8 z-50">
+<button class="floating-action-gradient w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-on-primary transition-transform active:scale-90 hover:scale-110">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">mic</span>
+</button>
+</div>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-8 left-0 right-0 z-50 flex justify-around items-center px-6">
+<div class="bg-[#1b1918]/60 backdrop-blur-3xl w-[90%] max-w-md rounded-2xl flex justify-around items-center p-2 border border-[#4a4745]/15 shadow-[0_40px_60px_-15px_rgba(234,228,224,0.06)]">
+<!-- Active: Home (auto_awesome) -->
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#ffb77d] to-[#6e3900] text-[#643400] rounded-xl p-3 transition-transform duration-300 scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</a>
+<!-- Search -->
+<a class="flex flex-col items-center justify-center text-[#afaaa7] p-3 hover:bg-[#2e2c29] transition-all duration-300 ease-in-out rounded-xl scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">search</span>
+</a>
+<!-- Settings -->
+<a class="flex flex-col items-center justify-center text-[#afaaa7] p-3 hover:bg-[#2e2c29] transition-all duration-300 ease-in-out rounded-xl scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">settings</span>
+</a>
+</div>
+</nav>
+</body></html>

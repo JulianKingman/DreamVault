@@ -54,6 +54,7 @@
         "expo-build-properties",
         {
           "ios": {
+            "newArchEnabled": true,
             "newArchEnabled": true
           },
           "android": {
@@ -61,7 +62,8 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "./plugins/withLinkerFlags"
     ],
     "experiments": {
       "typedRoutes": true

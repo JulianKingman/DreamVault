@@ -100,7 +100,7 @@ function RootLayoutInner() {
               name="new-dream"
               options={{ presentation: 'modal', title: 'New Dream Entry' }}
             />
-            <Stack.Screen name="view-dream" options={{ title: 'View Dream' }} />
+            <Stack.Screen name="view-dream" options={{ headerShown: false }} />
             <Stack.Screen
               name="import"
               options={{ presentation: 'modal', title: 'Import Dreams' }}

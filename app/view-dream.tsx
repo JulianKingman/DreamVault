@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { YStack, Text, Input, Button, XStack } from 'tamagui';
 import { getDreamById, updateDream, toggleFavorite, deleteDream, setDreamTags, getAllTags } from '../utils/database';
 import type { Dream, Tag } from '../types';
-import { Star, Trash2, X, Edit3, Share2, ChevronLeft, Compass } from '@tamagui/lucide-icons';
+import { Bookmark, Trash2, X, Edit3, Share2, ChevronLeft, Compass } from '@tamagui/lucide-icons';
 import { AIInsights } from '../components/AIInsights';
 import { AtmosphericBackground } from '../components/AtmosphericBackground';
 import { GlassCard } from '../components/GlassCard';
@@ -466,7 +466,7 @@ export default function ViewDreamScreen() {
                 backgroundColor={dream.isFavorite ? '$accentBackground' : undefined}
               >
                 <YStack alignItems="center" gap="$1">
-                  <Star
+                  <Bookmark
                     size={20}
                     color={dream.isFavorite ? '$accentColor' : '$gray10'}
                     fill={dream.isFavorite ? '#643400' : 'none'}
@@ -477,7 +477,7 @@ export default function ViewDreamScreen() {
                     fontWeight="500"
                     color={dream.isFavorite ? '$accentColor' : '$gray10'}
                   >
-                    {dream.isFavorite ? 'Saved' : 'Save'}
+                    Bookmark
                   </Text>
                 </YStack>
               </Button>
