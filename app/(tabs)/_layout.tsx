@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Clock, Star, Search, Settings } from '@tamagui/lucide-icons';
+import { Sparkles, Star, Search, Settings } from '@tamagui/lucide-icons';
+import { FloatingTabBar } from '../../components/FloatingTabBar';
 
 export default function TabLayout() {
   return (
@@ -8,33 +9,34 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
       }}
+      tabBar={(props) => <FloatingTabBar {...props} />}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Recent',
-          tabBarIcon: ({ color }) => <Clock color={color} />,
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => <Sparkles color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
           title: 'Favorites',
-          tabBarIcon: ({ color }) => <Star color={color} />,
+          tabBarIcon: ({ color, size }) => <Star color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ color }) => <Search color={color} />,
+          tabBarIcon: ({ color, size }) => <Search color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <Settings color={color} />,
+          tabBarIcon: ({ color, size }) => <Settings color={color} size={size} />,
         }}
       />
     </Tabs>
