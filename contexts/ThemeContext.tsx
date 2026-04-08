@@ -1,17 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { storage } from '../utils/storage';
 
 const THEME_KEY = 'theme_preference';
 
-type ThemeMode = 'light' | 'dark' | 'system';
-type ResolvedTheme = 'light' | 'dark';
+type ThemeMode = 'light' | 'dark' | 'midnight' | 'system';
+type ResolvedTheme = 'light' | 'dark' | 'midnight';
 
 interface ThemeContextValue {
   themeMode: ThemeMode;
   resolvedTheme: ResolvedTheme;
   setThemeMode: (mode: ThemeMode) => void;
-  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -34,14 +33,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemeModeState(mode);
   };
 
-  const toggleTheme = () => {
-    const next = resolvedTheme === 'dark' ? 'light' : 'dark';
-    setThemeMode(next);
-  };
-
   return (
     <ThemeContext.Provider
-      value={{ themeMode, resolvedTheme, setThemeMode, toggleTheme }}
+      value={{ themeMode, resolvedTheme, setThemeMode }}
     >
       {children}
     </ThemeContext.Provider>

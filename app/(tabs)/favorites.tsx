@@ -7,7 +7,7 @@ export default function FavoritesScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <NoteList />
+        <NoteList favoritesOnly />
       </View>
     </SafeAreaView>
   );

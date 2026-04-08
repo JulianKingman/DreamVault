@@ -8,14 +8,14 @@ import type { Tag } from '../types';
 import { useAI } from '../hooks/useAI';
 
 const inputStyle = {
-  backgroundColor: 'rgba(255,255,255,0.06)',
-  borderColor: 'rgba(255,255,255,0.12)',
+  backgroundColor: '$backgroundHover',
+  borderColor: '$borderColor',
   borderWidth: 1,
-  color: '#fff',
-  placeholderTextColor: 'rgba(255,255,255,0.35)',
+  color: '$color',
+  placeholderTextColor: '$placeholderColor',
   focusStyle: {
-    borderColor: 'rgba(140,120,255,0.5)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor: '$borderColorFocus',
+    backgroundColor: '$backgroundFocus',
   },
 } as const;
 
@@ -82,7 +82,7 @@ export function NewDreamForm() {
       <YStack gap="$4" padding="$4">
         {/* Title */}
         <YStack gap="$1.5">
-          <Text fontSize="$2" color="rgba(255,255,255,0.5)" fontWeight="600" textTransform="uppercase" letterSpacing={1}>
+          <Text fontSize="$2" color="$gray10" fontWeight="600" textTransform="uppercase" letterSpacing={1}>
             Title
           </Text>
           <Input
@@ -97,7 +97,7 @@ export function NewDreamForm() {
 
         {/* Dream content */}
         <YStack gap="$1.5">
-          <Text fontSize="$2" color="rgba(255,255,255,0.5)" fontWeight="600" textTransform="uppercase" letterSpacing={1}>
+          <Text fontSize="$2" color="$gray10" fontWeight="600" textTransform="uppercase" letterSpacing={1}>
             Dream
           </Text>
           <TextArea
@@ -115,7 +115,7 @@ export function NewDreamForm() {
 
         {/* Intention */}
         <YStack gap="$1.5">
-          <Text fontSize="$2" color="rgba(255,255,255,0.5)" fontWeight="600" textTransform="uppercase" letterSpacing={1}>
+          <Text fontSize="$2" color="$gray10" fontWeight="600" textTransform="uppercase" letterSpacing={1}>
             Intention
           </Text>
           <Input
@@ -130,7 +130,7 @@ export function NewDreamForm() {
 
         {/* Notes */}
         <YStack gap="$1.5">
-          <Text fontSize="$2" color="rgba(255,255,255,0.5)" fontWeight="600" textTransform="uppercase" letterSpacing={1}>
+          <Text fontSize="$2" color="$gray10" fontWeight="600" textTransform="uppercase" letterSpacing={1}>
             Notes
           </Text>
           <TextArea
@@ -148,7 +148,7 @@ export function NewDreamForm() {
 
         {/* Tags */}
         <YStack gap="$2">
-          <Text fontSize="$2" color="rgba(255,255,255,0.5)" fontWeight="600" textTransform="uppercase" letterSpacing={1}>
+          <Text fontSize="$2" color="$gray10" fontWeight="600" textTransform="uppercase" letterSpacing={1}>
             Tags
           </Text>
           <Input
@@ -164,9 +164,9 @@ export function NewDreamForm() {
           />
           {filteredSuggestions.length > 0 && (
             <YStack
-              backgroundColor="rgba(255,255,255,0.08)"
+              backgroundColor="$backgroundStrong"
               borderRadius="$3"
-              borderColor="rgba(255,255,255,0.1)"
+              borderColor="$borderColor"
               borderWidth={1}
               padding="$1"
             >
@@ -175,9 +175,9 @@ export function NewDreamForm() {
                   key={tag.id}
                   padding="$2"
                   paddingHorizontal="$3"
-                  color="#fff"
+                  color="$color"
                   borderRadius="$2"
-                  pressStyle={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                  pressStyle={{ backgroundColor: '$backgroundPress' }}
                   onPress={() => addTag(tag.name)}
                 >
                   {tag.name}
@@ -190,8 +190,8 @@ export function NewDreamForm() {
               {selectedTags.map(tag => (
                 <XStack
                   key={tag}
-                  backgroundColor="rgba(140,120,255,0.2)"
-                  borderColor="rgba(140,120,255,0.3)"
+                  backgroundColor="$purple4"
+                  borderColor="$purple6"
                   borderWidth={1}
                   borderRadius="$6"
                   paddingHorizontal="$3"
@@ -199,8 +199,8 @@ export function NewDreamForm() {
                   alignItems="center"
                   gap="$1.5"
                 >
-                  <Text fontSize="$3" color="rgba(200,190,255,0.9)">{tag}</Text>
-                  <X size={14} color="rgba(200,190,255,0.6)" onPress={() => removeTag(tag)} />
+                  <Text fontSize="$3" color="$purple10">{tag}</Text>
+                  <X size={14} color="$purple8" onPress={() => removeTag(tag)} />
                 </XStack>
               ))}
             </XStack>
@@ -211,14 +211,14 @@ export function NewDreamForm() {
         {aiAvailable && content.trim().length > 0 && (
           <Button
             size="$3"
-            icon={suggestingTags ? <Spinner size="small" /> : <Sparkles size={16} color="rgba(200,190,255,0.8)" />}
+            icon={suggestingTags ? <Spinner size="small" /> : <Sparkles size={16} color="$purple10" />}
             disabled={suggestingTags}
-            backgroundColor="rgba(140,120,255,0.15)"
-            borderColor="rgba(140,120,255,0.25)"
+            backgroundColor="$purple3"
+            borderColor="$purple5"
             borderWidth={1}
             borderRadius="$3"
-            color="rgba(200,190,255,0.9)"
-            pressStyle={{ backgroundColor: 'rgba(140,120,255,0.25)' }}
+            color="$purple10"
+            pressStyle={{ backgroundColor: '$purple5' }}
             onPress={async () => {
               setSuggestingTags(true);
               try {
@@ -241,14 +241,14 @@ export function NewDreamForm() {
         <Button
           size="$5"
           onPress={handleSubmit}
-          backgroundColor={content.trim() ? 'rgba(140,120,255,0.9)' : 'rgba(255,255,255,0.08)'}
-          color={content.trim() ? '#fff' : 'rgba(255,255,255,0.3)'}
+          backgroundColor={content.trim() ? '$purple9' : '$backgroundHover'}
+          color={content.trim() ? '#fff' : '$gray8'}
           borderRadius="$4"
           fontWeight="700"
           fontSize="$5"
           marginTop="$2"
-          pressStyle={{ backgroundColor: 'rgba(140,120,255,0.7)' }}
-          icon={<Moon size={18} color={content.trim() ? '#fff' : 'rgba(255,255,255,0.3)'} />}
+          pressStyle={{ backgroundColor: '$purple8' }}
+          icon={<Moon size={18} color={content.trim() ? '#fff' : '$gray8'} />}
         >
           Save Dream
         </Button>

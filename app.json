@@ -14,7 +14,21 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.buishi.dreamvault"
+      "bundleIdentifier": "com.buishi.dreamvault",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Dream Vault uses Face ID to protect your dream journal."
+      },
+      "entitlements": {
+        "com.apple.developer.icloud-container-identifiers": [
+          "iCloud.com.buishi.dreamvault"
+        ],
+        "com.apple.developer.icloud-services": [
+          "CloudDocuments"
+        ],
+        "com.apple.developer.ubiquity-container-identifiers": [
+          "iCloud.com.buishi.dreamvault"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -31,6 +45,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Dream Vault uses Face ID to protect your dream journal."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {
@@ -40,7 +60,8 @@
             "newArchEnabled": true
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
