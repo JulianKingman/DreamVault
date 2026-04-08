@@ -1,11 +1,19 @@
 import React from 'react';
-import { SafeAreaView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { NewDreamForm } from '../components/NewDreamForm';
+import { AtmosphericBackground } from '../components/AtmosphericBackground';
 
 export default function NewDreamScreen() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View style={styles.container}>
+      <AtmosphericBackground />
       <NewDreamForm />
-    </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
