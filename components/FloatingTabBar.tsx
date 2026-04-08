@@ -3,6 +3,8 @@ import { StyleSheet, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from './GlassCard';
+import { useTheme } from '../contexts/ThemeContext';
+import { getAccentGradient, getAccentForeground, getInactiveColor } from '../utils/themeColors';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 /**
@@ -12,6 +14,10 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
  */
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { resolvedTheme } = useTheme();
+  const accentGradient = getAccentGradient(resolvedTheme);
+  const accentFg = getAccentForeground(resolvedTheme);
+  const inactiveColor = getInactiveColor(resolvedTheme);
 
   return (
     <View
@@ -54,7 +60,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
 
           const icon = options.tabBarIcon?.({
             focused: isFocused,
-            color: isFocused ? '#643400' : '#909fb5',
+            color: isFocused ? accentFg : inactiveColor,
             size: 22,
           });
 
@@ -73,7 +79,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                 ]}
               >
                 <LinearGradient
-                  colors={['#ffb77d', '#6e3900']}
+                  colors={accentGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.activeGradient}

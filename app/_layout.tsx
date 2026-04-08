@@ -17,6 +17,7 @@ import {
 } from '@react-navigation/native';
 import type { Theme as NavTheme } from '@react-navigation/native';
 import { ThemeProvider as AppThemeProvider, useTheme } from '../contexts/ThemeContext';
+import { getAccentGradient, getAccentForeground } from '../utils/themeColors';
 
 // Navigation theme for Twilight (dark)
 const TwilightNavTheme: NavTheme = {
@@ -106,7 +107,7 @@ function RootLayoutInner() {
               bottom={100}
             >
               <LinearGradient
-                colors={['#ffb77d', '#6e3900']}
+                colors={getAccentGradient(resolvedTheme)}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -118,7 +119,7 @@ function RootLayoutInner() {
                   pressStyle={{ opacity: 0.8, scale: 0.95 }}
                   onPress={() => router.push('/new-dream')}
                 >
-                  <Mic color="#643400" size={24} />
+                  <Mic color={getAccentForeground(resolvedTheme)} size={24} />
                 </YStack>
               </LinearGradient>
             </YStack>

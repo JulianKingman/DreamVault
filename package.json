@@ -26,6 +26,7 @@
     "@tamagui/config": "^1.112.4",
     "@tamagui/font-inter": "^1.112.3",
     "@tamagui/lucide-icons": "^1.112.3",
+    "@tamagui/react-native-web-lite": "^2.0.0-rc.37",
     "@tamagui/shorthands": "^1.112.3",
     "@tamagui/themes": "^1.112.3",
     "crystals-kyber-js": "^2.5.0",
