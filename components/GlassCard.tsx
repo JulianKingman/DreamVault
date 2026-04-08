@@ -29,7 +29,7 @@ export function GlassCard({ children, style, ...stackProps }: GlassCardProps) {
       <YStack
         backgroundColor={
           resolvedTheme === 'light'
-            ? 'rgba(245, 240, 232, 0.4)'
+            ? 'rgba(248, 238, 235, 0.4)'
             : resolvedTheme === 'midnight'
               ? 'rgba(10, 2, 2, 0.4)'
               : 'rgba(0, 25, 56, 0.4)'

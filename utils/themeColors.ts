@@ -7,7 +7,7 @@ export function getAccentGradient(theme: string): [string, string] {
     case 'midnight':
       return ['hsl(358, 80%, 38%)', 'hsl(355, 35%, 12%)'];
     case 'light':
-      return ['#c47a30', '#8a5500'];
+      return ['#c4623a', '#8b3d1e'];
     default: // twilight (dark)
       return ['#ffb77d', '#6e3900'];
   }
@@ -35,7 +35,7 @@ export function getInactiveColor(theme: string): string {
     case 'midnight':
       return 'hsl(0, 20%, 30%)';
     case 'light':
-      return '#8a8479';
+      return '#9a8a85';
     default:
       return '#909fb5';
   }
@@ -49,7 +49,7 @@ export function getDisabledGradient(theme: string): [string, string] {
     case 'midnight':
       return ['hsl(0, 15%, 12%)', 'hsl(0, 15%, 8%)'];
     case 'light':
-      return ['#dfd8cb', '#c5bfb3'];
+      return ['#e8d8d3', '#d4c4be'];
     default:
       return ['#2e3c4f', '#1a2a3f'];
   }

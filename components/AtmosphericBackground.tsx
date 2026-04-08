@@ -53,19 +53,19 @@ export function AtmosphericBackground() {
     return (
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <LinearGradient
-          colors={['#f5f0e8', '#faf6f1']}
+          colors={['#fdf6f4', '#f8eeeb']}
           start={{ x: 0.8, y: 0 }}
           end={{ x: 0.2, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
         <GlowOrb
           style={[styles.glowTopRight, glow1Style]}
-          r={196} g={122} b={48} intensity={0.08}
+          r={196} g={98} b={58} intensity={0.07}
           size={500}
         />
         <GlowOrb
           style={[styles.glowBottomLeft, glow2Style]}
-          r={140} g={130} b={115} intensity={0.06}
+          r={180} g={140} b={150} intensity={0.06}
           size={550}
         />
       </View>

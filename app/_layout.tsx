@@ -33,16 +33,16 @@ const TwilightNavTheme: NavTheme = {
   fonts: DarkTheme.fonts,
 };
 
-// Navigation theme for Twilight Light
+// Navigation theme for Twilight Light (dawn pink)
 const TwilightLightNavTheme: NavTheme = {
   dark: false,
   colors: {
-    primary: '#c47a30',
-    background: '#faf6f1',
-    card: '#f5f0e8',
-    text: '#1a1510',
-    border: 'rgba(140,130,115,0.2)',
-    notification: '#c47a30',
+    primary: '#c4623a',
+    background: '#fdf6f4',
+    card: '#f8eeeb',
+    text: '#2a1f1b',
+    border: 'rgba(160,120,110,0.2)',
+    notification: '#c4623a',
   },
   fonts: DefaultTheme.fonts,
 };
