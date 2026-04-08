@@ -1,8 +1,9 @@
 import React, { useState, useCallback, ReactElement } from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet, Image, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Text, YStack, XStack, Separator, Input, Button } from 'tamagui';
+import { Text, YStack, XStack, Input, Button } from 'tamagui';
 import { Trash2 } from '@tamagui/lucide-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { Dream } from '../types';
 import { Link } from 'expo-router';
 import { useDreams } from '@/hooks/useDreams';
@@ -50,7 +51,7 @@ export function NoteList({
   const renderRightActions = useCallback((id: number) => {
     return (
       <Button
-        backgroundColor="$red10"
+        backgroundColor="$red9"
         height="100%"
         borderRadius={0}
         paddingHorizontal="$4"
@@ -73,13 +74,15 @@ export function NoteList({
 
     const contentPreview = item.content
       .split('\n')
-      .slice(0, 2)
+      .slice(0, 3)
       .join('\n')
       .trim();
     const truncatedContent =
-      contentPreview.length > 100
-        ? `${contentPreview.substring(0, 100)}...`
+      contentPreview.length > 150
+        ? `${contentPreview.substring(0, 150)}...`
         : contentPreview;
+
+    const hasImage = !!item.imageUri;
 
     return (
       <Swipeable
@@ -88,41 +91,114 @@ export function NoteList({
       >
         <Link href={`/view-dream?dreamId=${item.id}`}>
           <YStack
-            padding="$3"
             backgroundColor="$backgroundStrong"
-            borderRadius="$2"
-            marginBottom="$2"
-            borderColor="$border"
-            borderWidth=".2"
+            borderRadius={20}
+            marginBottom="$3"
+            overflow="hidden"
             width="100%"
           >
-            <XStack justifyContent="space-between" alignItems="center">
-              <Text fontSize="$5" fontWeight="bold" numberOfLines={1}>
-                {item.title || dateString}
-              </Text>
-            </XStack>
-            {item.title && (
-              <Text fontSize="$3" color="$gray10" marginTop="$1">
-                {dateString}
-              </Text>
-            )}
-            <Text fontSize="$4" numberOfLines={2} marginTop="$1">
-              {truncatedContent}
-            </Text>
-            {item.tags && item.tags.length > 0 && (
-              <XStack flexWrap="wrap" gap="$1" marginTop="$2">
-                {item.tags.map(tag => (
-                  <XStack
-                    key={tag.id}
-                    backgroundColor="$blue4"
-                    borderRadius="$4"
-                    paddingHorizontal="$2"
-                    paddingVertical="$0.5"
+            {hasImage ? (
+              // Image + text card
+              <View style={styles.imageCard}>
+                <Image
+                  source={{ uri: item.imageUri! }}
+                  style={styles.cardImage}
+                />
+                <LinearGradient
+                  colors={['transparent', 'rgba(4,14,31,0.7)', 'rgba(4,14,31,0.95)']}
+                  style={styles.imageOverlay}
+                />
+                <YStack style={styles.imageContent} padding="$4" gap="$2">
+                  <Text
+                    fontSize="$3"
+                    color="$gray10"
+                    fontFamily="$body"
+                    letterSpacing={1.5}
+                    textTransform="uppercase"
                   >
-                    <Text fontSize="$2">{tag.name}</Text>
+                    {dateString}
+                  </Text>
+                  <Text
+                    fontFamily="$heading"
+                    fontSize="$6"
+                    lineHeight={28}
+                    color="$color"
+                    numberOfLines={3}
+                  >
+                    {truncatedContent}
+                  </Text>
+                  {item.tags && item.tags.length > 0 && (
+                    <XStack flexWrap="wrap" gap="$2" marginTop="$1">
+                      {item.tags.map(tag => (
+                        <XStack
+                          key={tag.id}
+                          backgroundColor="$gray6"
+                          borderRadius={9999}
+                          paddingHorizontal="$3"
+                          paddingVertical="$1.5"
+                        >
+                          <Text
+                            fontSize={10}
+                            fontFamily="$body"
+                            fontWeight="500"
+                            letterSpacing={1}
+                            textTransform="uppercase"
+                            color="$gray10"
+                          >
+                            {tag.name}
+                          </Text>
+                        </XStack>
+                      ))}
+                    </XStack>
+                  )}
+                </YStack>
+              </View>
+            ) : (
+              // Text-only card
+              <YStack padding="$4" gap="$2">
+                <Text
+                  fontSize="$2"
+                  color="$gray10"
+                  fontFamily="$body"
+                  letterSpacing={1.5}
+                  textTransform="uppercase"
+                >
+                  {dateString}
+                </Text>
+                <Text
+                  fontFamily="$heading"
+                  fontSize="$5"
+                  lineHeight={26}
+                  color="$color"
+                  numberOfLines={3}
+                >
+                  {truncatedContent}
+                </Text>
+                {item.tags && item.tags.length > 0 && (
+                  <XStack flexWrap="wrap" gap="$2" marginTop="$1">
+                    {item.tags.map(tag => (
+                      <XStack
+                        key={tag.id}
+                        backgroundColor="$gray6"
+                        borderRadius={9999}
+                        paddingHorizontal="$3"
+                        paddingVertical="$1.5"
+                      >
+                        <Text
+                          fontSize={10}
+                          fontFamily="$body"
+                          fontWeight="500"
+                          letterSpacing={1}
+                          textTransform="uppercase"
+                          color="$gray10"
+                        >
+                          {tag.name}
+                        </Text>
+                      </XStack>
+                    ))}
                   </XStack>
-                ))}
-              </XStack>
+                )}
+              </YStack>
             )}
           </YStack>
         </Link>
@@ -138,6 +214,10 @@ export function NoteList({
       marginBottom={searchPosition === 'top' ? '$2' : undefined}
       marginTop={searchPosition === 'bottom' ? '$2' : undefined}
       marginHorizontal="$4"
+      borderRadius={9999}
+      backgroundColor="$backgroundStrong"
+      borderWidth={0}
+      fontFamily="$body"
     />
   ) : null;
 
@@ -157,7 +237,6 @@ export function NoteList({
       data={dreams}
       renderItem={renderItem}
       keyExtractor={(item: Dream) => `dream-${item.id}`}
-      ItemSeparatorComponent={() => <Separator />}
       contentContainerStyle={styles.listContent}
       ListHeaderComponent={listHeader}
       ListFooterComponent={listFooter}
@@ -170,5 +249,25 @@ export function NoteList({
 const styles = StyleSheet.create({
   listContent: {
     padding: 16,
+    paddingBottom: 120, // Space for floating tab bar
+  },
+  imageCard: {
+    minHeight: 320,
+    position: 'relative',
+  },
+  cardImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  imageContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 });

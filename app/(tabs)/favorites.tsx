@@ -1,22 +1,20 @@
 import React from 'react';
 import { StyleSheet, SafeAreaView, View } from 'react-native';
-import { Text } from 'tamagui';
 import { NoteList } from '../../components/NoteList';
+import { AtmosphericBackground } from '../../components/AtmosphericBackground';
 
 export default function FavoritesScreen() {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <View style={styles.container}>
+      <AtmosphericBackground />
+      <SafeAreaView style={styles.container}>
         <NoteList favoritesOnly />
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
   container: {
     flex: 1,
   },

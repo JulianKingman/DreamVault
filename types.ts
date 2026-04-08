@@ -7,6 +7,7 @@ export interface Dream {
   title: string | null;
   intention: string | null;
   notes: string | null;
+  imageUri?: string | null;
   tags?: Tag[];
   uuid?: string;
   lastSyncedAt?: Date | null;
