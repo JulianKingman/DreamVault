@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ScrollView, StyleSheet, TextInput, View, KeyboardAvoidingView, Platform } from 'react-native';
 import { Button, YStack, XStack, Text, Spinner } from 'tamagui';
-import { X, Sparkles, Star, Tag, Image as ImageIcon } from '@tamagui/lucide-icons';
+import { X, Sparkles, Star, Tag, Compass } from '@tamagui/lucide-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { addDream, setDreamTags, getAllTags } from '../utils/database';
 import { useRouter } from 'expo-router';
@@ -97,16 +97,19 @@ export function NewDreamForm() {
         {showIntention && (
           <YStack paddingHorizontal={24} gap="$2" marginTop="$4">
             <XStack alignItems="center" justifyContent="space-between">
-              <Text
-                fontSize="$2"
-                color="$gray10"
-                fontFamily="$body"
-                fontWeight="600"
-                letterSpacing={1.5}
-                textTransform="uppercase"
-              >
-                Intention
-              </Text>
+              <XStack alignItems="center" gap="$2">
+                <Compass size={14} color="$gray10" />
+                <Text
+                  fontSize="$2"
+                  color="$gray10"
+                  fontFamily="$body"
+                  fontWeight="600"
+                  letterSpacing={1.5}
+                  textTransform="uppercase"
+                >
+                  Intention
+                </Text>
+              </XStack>
               <X size={16} color="$gray8" onPress={() => { setShowIntention(false); setIntention(''); }} />
             </XStack>
             <TextInput
@@ -292,9 +295,7 @@ export function NewDreamForm() {
                 padding="$3"
                 borderRadius={9999}
               >
-                <Text fontSize="$2" color="$gray10" fontFamily="$body" fontWeight="500">
-                  + Intention
-                </Text>
+                <Compass size={20} color="$gray10" />
               </Button>
             )}
           </XStack>

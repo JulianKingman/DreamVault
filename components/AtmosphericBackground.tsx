@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Defs, RadialGradient, Stop, Rect } from 'react-native-svg';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -12,20 +13,19 @@ import Animated, {
 import { useTheme } from '../contexts/ThemeContext';
 
 /**
- * Atmospheric background with gradient and slowly pulsating, heavily feathered glow orbs.
- * Replaces SkyScene.
+ * Atmospheric background with gradient and slowly pulsating radial glow orbs.
+ * Uses SVG RadialGradient for proper feathering with no hard edges.
  */
 export function AtmosphericBackground() {
   const { resolvedTheme } = useTheme();
 
-  // Slow pulsating animation for the glow orbs
   const pulse1 = useSharedValue(1);
   const pulse2 = useSharedValue(1);
 
   useEffect(() => {
     pulse1.value = withRepeat(
       withSequence(
-        withTiming(1.2, { duration: 8000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1.15, { duration: 8000, easing: Easing.inOut(Easing.ease) }),
         withTiming(1, { duration: 8000, easing: Easing.inOut(Easing.ease) }),
       ),
       -1,
@@ -33,7 +33,7 @@ export function AtmosphericBackground() {
     );
     pulse2.value = withRepeat(
       withSequence(
-        withTiming(0.8, { duration: 10000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.85, { duration: 10000, easing: Easing.inOut(Easing.ease) }),
         withTiming(1, { duration: 10000, easing: Easing.inOut(Easing.ease) }),
       ),
       -1,
@@ -43,12 +43,10 @@ export function AtmosphericBackground() {
 
   const glow1Style = useAnimatedStyle(() => ({
     transform: [{ scale: pulse1.value }],
-    opacity: 0.5 + (pulse1.value - 1) * 1.5,
   }));
 
   const glow2Style = useAnimatedStyle(() => ({
     transform: [{ scale: pulse2.value }],
-    opacity: 0.5 + (1 - pulse2.value) * 1.2,
   }));
 
   if (resolvedTheme === 'light') {
@@ -62,13 +60,13 @@ export function AtmosphericBackground() {
         />
         <GlowOrb
           style={[styles.glowTopRight, glow1Style]}
-          color={[196, 122, 48]}
-          intensity={0.06}
+          r={196} g={122} b={48} intensity={0.08}
+          size={500}
         />
         <GlowOrb
           style={[styles.glowBottomLeft, glow2Style]}
-          color={[140, 130, 115]}
-          intensity={0.05}
+          r={140} g={130} b={115} intensity={0.06}
+          size={550}
         />
       </View>
     );
@@ -85,8 +83,8 @@ export function AtmosphericBackground() {
         />
         <GlowOrb
           style={[styles.glowTopRight, glow1Style]}
-          color={[180, 40, 40]}
-          intensity={0.06}
+          r={180} g={40} b={40} intensity={0.07}
+          size={500}
         />
       </View>
     );
@@ -103,72 +101,59 @@ export function AtmosphericBackground() {
       />
       <GlowOrb
         style={[styles.glowTopRight, glow1Style]}
-        color={[255, 183, 125]}
-        intensity={0.06}
+        r={255} g={183} b={125} intensity={0.07}
+        size={500}
       />
       <GlowOrb
         style={[styles.glowBottomLeft, glow2Style]}
-        color={[46, 60, 100]}
-        intensity={0.10}
+        r={46} g={60} b={100} intensity={0.12}
+        size={550}
       />
     </View>
   );
 }
 
 /**
- * A single glow orb with heavily feathered edges.
- * Uses concentric gradient layers to simulate a radial blur.
+ * SVG radial gradient orb. Fades from center color to fully transparent
+ * at the edges — no hard boundary.
  */
 function GlowOrb({
   style,
-  color,
+  r, g, b,
   intensity,
+  size,
 }: {
   style: any;
-  color: [number, number, number];
+  r: number; g: number; b: number;
   intensity: number;
+  size: number;
 }) {
-  const [r, g, b] = color;
-  // Multiple gradient stops from center to edge, fading out
-  const inner = `rgba(${r}, ${g}, ${b}, ${intensity})`;
-  const mid = `rgba(${r}, ${g}, ${b}, ${intensity * 0.5})`;
-  const outer = `rgba(${r}, ${g}, ${b}, ${intensity * 0.15})`;
-  const edge = `rgba(${r}, ${g}, ${b}, 0)`;
-
   return (
-    <Animated.View style={[styles.glow, style]}>
-      <LinearGradient
-        colors={[inner, mid, outer, edge]}
-        locations={[0, 0.3, 0.6, 1]}
-        start={{ x: 0.5, y: 0.5 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.glowGradient}
-      />
+    <Animated.View style={[{ width: size, height: size }, style]}>
+      <Svg width={size} height={size}>
+        <Defs>
+          <RadialGradient id={`glow-${r}-${g}-${b}`} cx="50%" cy="50%" rx="50%" ry="50%">
+            <Stop offset="0%" stopColor={`rgb(${r},${g},${b})`} stopOpacity={intensity} />
+            <Stop offset="40%" stopColor={`rgb(${r},${g},${b})`} stopOpacity={intensity * 0.5} />
+            <Stop offset="70%" stopColor={`rgb(${r},${g},${b})`} stopOpacity={intensity * 0.15} />
+            <Stop offset="100%" stopColor={`rgb(${r},${g},${b})`} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Rect x="0" y="0" width={size} height={size} fill={`url(#glow-${r}-${g}-${b})`} />
+      </Svg>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  glow: {
-    position: 'absolute',
-    borderRadius: 9999,
-    overflow: 'hidden',
-  },
-  glowGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 9999,
-  },
   glowTopRight: {
+    position: 'absolute',
     top: -120,
     right: -120,
-    width: 500,
-    height: 500,
   },
   glowBottomLeft: {
+    position: 'absolute',
     bottom: '20%',
     left: -150,
-    width: 550,
-    height: 550,
   },
 });

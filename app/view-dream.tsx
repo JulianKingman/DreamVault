@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { YStack, Text, Input, Button, XStack } from 'tamagui';
 import { getDreamById, updateDream, toggleFavorite, deleteDream, setDreamTags, getAllTags } from '../utils/database';
 import type { Dream, Tag } from '../types';
-import { Star, Trash2, X, Edit3, Share2, ChevronLeft } from '@tamagui/lucide-icons';
+import { Star, Trash2, X, Edit3, Share2, ChevronLeft, Compass } from '@tamagui/lucide-icons';
 import { AIInsights } from '../components/AIInsights';
 import { AtmosphericBackground } from '../components/AtmosphericBackground';
 import { GlassCard } from '../components/GlassCard';
@@ -199,9 +199,12 @@ export default function ViewDreamScreen() {
               />
 
               <YStack gap="$2">
-                <Text fontSize="$2" color="$gray10" fontFamily="$body" letterSpacing={1.5} textTransform="uppercase">
-                  Intention
-                </Text>
+                <XStack alignItems="center" gap="$2">
+                  <Compass size={14} color="$gray10" />
+                  <Text fontSize="$2" color="$gray10" fontFamily="$body" letterSpacing={1.5} textTransform="uppercase">
+                    Intention
+                  </Text>
+                </XStack>
                 <TextInput
                   style={styles.editField}
                   value={editedIntention}
@@ -335,16 +338,19 @@ export default function ViewDreamScreen() {
                   padding="$4"
                   gap="$2"
                 >
-                  <Text
-                    fontSize="$2"
-                    color="$gray10"
-                    fontFamily="$body"
-                    fontWeight="600"
-                    letterSpacing={1.5}
-                    textTransform="uppercase"
-                  >
-                    Intention
-                  </Text>
+                  <XStack alignItems="center" gap="$2">
+                    <Compass size={14} color="$gray10" />
+                    <Text
+                      fontSize="$2"
+                      color="$gray10"
+                      fontFamily="$body"
+                      fontWeight="600"
+                      letterSpacing={1.5}
+                      textTransform="uppercase"
+                    >
+                      Intention
+                    </Text>
+                  </XStack>
                   <Text fontFamily="$body" fontSize="$4" lineHeight={22} color="$color">
                     {dream.intention}
                   </Text>
