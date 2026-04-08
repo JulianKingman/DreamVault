@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import * as LocalAuthentication from 'expo-local-authentication';
+import { getDbKey, createDbKey, hasDbKey } from '../utils/db-key';
+import { initDatabase, closeDatabase } from '../utils/database';
 import { storage } from '../utils/storage';
 
 const AUTH_ENABLED_KEY = 'auth_enabled';
@@ -8,6 +9,7 @@ const AUTH_ENABLED_KEY = 'auth_enabled';
 interface AuthContextValue {
   isAuthenticated: boolean;
   isAuthEnabled: boolean;
+  isFirstLaunch: boolean;
   setAuthEnabled: (enabled: boolean) => void;
   authenticate: () => Promise<boolean>;
 }
@@ -19,17 +21,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthEnabled, setIsAuthEnabledState] = useState(() =>
     storage.getBoolean(AUTH_ENABLED_KEY) ?? false
   );
+  const [isFirstLaunch, setIsFirstLaunch] = useState(false);
   const appState = useRef(AppState.currentState);
+  const isAuthenticating = useRef(false);
 
-  const authenticate = async (): Promise<boolean> => {
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: 'Unlock Dream Vault',
-      fallbackLabel: 'Use passcode',
-      disableDeviceFallback: false,
-    });
-    setIsAuthenticated(result.success);
-    return result.success;
-  };
+  const authenticate = useCallback(async (): Promise<boolean> => {
+    if (isAuthenticating.current) return false;
+    isAuthenticating.current = true;
+    try {
+      console.log('[Auth] Starting authentication...');
+      const keyExists = await hasDbKey();
+      console.log('[Auth] Key exists:', keyExists);
+
+      if (!keyExists) {
+        setIsFirstLaunch(true);
+        console.log('[Auth] First launch, creating key...');
+        const key = await createDbKey();
+        console.log('[Auth] Key created, initializing DB...');
+        initDatabase(key);
+        setIsAuthenticated(true);
+        setIsFirstLaunch(false);
+        console.log('[Auth] Authenticated!');
+        return true;
+      }
+
+      console.log('[Auth] Retrieving key...');
+      const key = await getDbKey();
+      if (!key) {
+        console.log('[Auth] Key retrieval returned null');
+        return false;
+      }
+
+      console.log('[Auth] Key retrieved, initializing DB...');
+      initDatabase(key);
+      setIsAuthenticated(true);
+      console.log('[Auth] Authenticated!');
+      return true;
+    } catch (e) {
+      console.error('[Auth] Error:', e);
+      return false;
+    } finally {
+      isAuthenticating.current = false;
+    }
+  }, []);
 
   const setAuthEnabled = (enabled: boolean) => {
     storage.set(AUTH_ENABLED_KEY, enabled);
@@ -39,32 +73,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Lock when app goes to background, unlock attempt when returning
+  // Re-lock when app returns from background
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
       if (
-        isAuthEnabled &&
         appState.current.match(/inactive|background/) &&
-        nextState === 'active'
+        nextState === 'active' &&
+        isAuthenticated &&
+        !isAuthenticating.current
       ) {
-        setIsAuthenticated(false);
+        if (appState.current === 'background') {
+          closeDatabase();
+          setIsAuthenticated(false);
+        }
       }
       appState.current = nextState;
     });
 
     return () => subscription.remove();
-  }, [isAuthEnabled]);
-
-  // Auto-authenticate on mount if auth is not enabled
-  useEffect(() => {
-    if (!isAuthEnabled) {
-      setIsAuthenticated(true);
-    }
-  }, [isAuthEnabled]);
+  }, [isAuthenticated]);
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, isAuthEnabled, setAuthEnabled, authenticate }}
+      value={{ isAuthenticated, isAuthEnabled, isFirstLaunch, setAuthEnabled, authenticate }}
     >
       {children}
     </AuthContext.Provider>

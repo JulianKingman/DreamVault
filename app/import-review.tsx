@@ -1,294 +1,363 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, FlatList, Alert, View, Animated } from 'react-native';
-import { YStack, XStack, Text, Button, Checkbox, Spinner } from 'tamagui';
-import { useRouter } from 'expo-router';
-import * as DocumentPicker from 'expo-document-picker';
-import { parseMultipleFiles, type ImportedDream } from '../utils/importers';
-import { addDreamBulk } from '../utils/database';
-import { Check, FileText, FolderOpen, Shield } from '@tamagui/lucide-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState, useMemo, useCallback } from 'react';
+import {
+  SafeAreaView,
+  Alert,
+  Pressable,
+  View,
+  StyleSheet,
+} from 'react-native';
+import {
+  Text,
+  YStack,
+  XStack,
+  Button,
+  Switch,
+  Separator,
+} from 'tamagui';
+import {
+  Calendar,
+  SplitSquareVertical,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  Check,
+} from '@tamagui/lucide-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { LegendList } from '@legendapp/list/react-native';
+import type { ParsedEntry, FileParseResult } from '../utils/import-parser';
+import {
+  addDreamBulk,
+  recordImport,
+  deleteImportedDreams,
+  deleteImportRecord,
+} from '../utils/database';
 import { AtmosphericBackground } from '../components/AtmosphericBackground';
+
+// -- Types --
+
+interface ReviewEntry extends ParsedEntry {
+  excluded: boolean;
+  fileIndex: number;
+}
+
+interface FileParseResultWithReplace extends FileParseResult {
+  _replaceImportId?: number;
+  _replaceDreamIds?: number[];
+}
+
+// -- Main Component --
 
 export default function ImportReviewScreen() {
   const router = useRouter();
-  const [imports, setImports] = useState<ImportedDream[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const [importProgress, setImportProgress] = useState(0);
-  const [picked, setPicked] = useState(false);
+  const params = useLocalSearchParams<{ data: string }>();
+  const [isImporting, setIsImporting] = useState(false);
+  const [optionsExpanded, setOptionsExpanded] = useState(true);
+  const [expandedEntry, setExpandedEntry] = useState<number | null>(null);
 
-  useEffect(() => {
-    pickFiles();
+  // Parse data from navigation params
+  const fileResults: FileParseResultWithReplace[] = useMemo(() => {
+    try {
+      return JSON.parse(params.data);
+    } catch {
+      return [];
+    }
+  }, [params.data]);
+
+  // Build flat entry list
+  const [entries, setEntries] = useState<ReviewEntry[]>(() => {
+    const all: ReviewEntry[] = [];
+    fileResults.forEach((file, fileIndex) => {
+      file.entries.forEach((entry) => {
+        all.push({ ...entry, excluded: false, fileIndex });
+      });
+    });
+    return all;
+  });
+
+  const includedEntries = useMemo(
+    () => entries.filter((e) => !e.excluded),
+    [entries]
+  );
+
+  const totalFiles = fileResults.length;
+
+  const toggleExclude = useCallback((index: number) => {
+    setEntries((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], excluded: !next[index].excluded };
+      return next;
+    });
   }, []);
 
-  const pickFiles = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['text/plain', 'text/markdown', 'text/*'],
-        multiple: true,
-        copyToCacheDirectory: true,
-      });
+  const toggleExpand = useCallback((index: number) => {
+    setExpandedEntry((prev) => (prev === index ? null : index));
+  }, []);
 
-      if (result.canceled) {
-        router.back();
-        return;
-      }
+  // -- Import --
 
-      const files = result.assets.map(a => ({ uri: a.uri, name: a.name }));
-      const parsed = await parseMultipleFiles(files);
-      setImports(parsed);
-      setPicked(true);
-    } catch (e) {
-      Alert.alert('Error', 'Failed to read files.');
-      router.back();
-    }
-  };
-
-  const toggleSelection = (index: number) => {
-    setImports(prev =>
-      prev.map((item, i) =>
-        i === index ? { ...item, selected: !item.selected } : item
-      )
-    );
-  };
-
-  const handleImport = () => {
-    const selected = imports.filter(i => i.selected);
-    if (selected.length === 0) {
-      Alert.alert('No items selected', 'Select at least one dream to import.');
+  const handleImport = async () => {
+    if (includedEntries.length === 0) {
+      Alert.alert('No entries', 'All entries have been excluded.');
       return;
     }
 
-    setImporting(true);
-    setLoading(true);
-
-    // Simulate progress
-    const interval = setInterval(() => {
-      setImportProgress(prev => {
-        if (prev >= 0.9) {
-          clearInterval(interval);
-          return prev;
-        }
-        return prev + 0.1;
-      });
-    }, 200);
-
+    setIsImporting(true);
     try {
-      addDreamBulk(
-        selected.map(i => ({
-          content: i.content,
-          title: i.title || undefined,
-          dateCreated: i.dateCreated ?? undefined,
-        }))
+      // Handle replacements first
+      for (const file of fileResults) {
+        if (file._replaceImportId != null && file._replaceDreamIds) {
+          deleteImportedDreams(file._replaceDreamIds);
+          deleteImportRecord(file._replaceImportId);
+        }
+      }
+
+      // Group entries by source file for import history
+      const entriesByFile = new Map<number, ReviewEntry[]>();
+      for (const entry of includedEntries) {
+        const existing = entriesByFile.get(entry.fileIndex) ?? [];
+        existing.push(entry);
+        entriesByFile.set(entry.fileIndex, existing);
+      }
+
+      let totalImported = 0;
+
+      for (const [fileIndex, fileEntries] of entriesByFile) {
+        const file = fileResults[fileIndex];
+        const dreams = fileEntries.map((e) => ({
+          content: e.content,
+          title: e.title ?? undefined,
+          dateCreated: e.dateCreated,
+        }));
+
+        const ids = addDreamBulk(dreams);
+        recordImport(file.contentHash, file.filename, ids);
+        totalImported += ids.length;
+      }
+
+      Alert.alert(
+        'Import Complete',
+        `Successfully imported ${totalImported} dream${totalImported === 1 ? '' : 's'}.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              router.dismissAll();
+            },
+          },
+        ]
       );
-      clearInterval(interval);
-      setImportProgress(1);
-      Alert.alert('Success', `Imported ${selected.length} dream(s).`, [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
-    } catch (e) {
-      clearInterval(interval);
-      Alert.alert('Error', 'Failed to import dreams.');
+    } catch (e: any) {
+      Alert.alert('Import Failed', e.message ?? 'An error occurred during import.');
     } finally {
-      setLoading(false);
-      setImporting(false);
+      setIsImporting(false);
     }
   };
 
-  const selectedCount = imports.filter(i => i.selected).length;
-
-  if (!picked) {
-    return (
-      <View style={styles.container}>
-        <AtmosphericBackground />
-        <SafeAreaView style={styles.centered}>
-          <Spinner size="large" color="$accentBackground" />
-          <Text color="$gray10" fontFamily="$body" marginTop="$4">
-            Selecting files...
-          </Text>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (imports.length === 0) {
-    return (
-      <View style={styles.container}>
-        <AtmosphericBackground />
-        <SafeAreaView style={styles.centered}>
-          <Text fontFamily="$body" color="$color" fontSize="$5">
-            No dreams found in selected files
-          </Text>
-          <Button
-            onPress={() => router.back()}
-            backgroundColor="$backgroundStrong"
-            borderRadius={9999}
-            fontFamily="$body"
-            marginTop="$4"
-          >
-            Go Back
-          </Button>
-        </SafeAreaView>
-      </View>
-    );
-  }
+  // -- Render --
 
   return (
     <View style={styles.container}>
       <AtmosphericBackground />
       <SafeAreaView style={styles.container}>
-        <YStack flex={1} padding="$4" gap="$4">
+        <YStack flex={1}>
           {/* Header */}
-          <YStack gap="$2">
-            <Text fontFamily="$heading" fontSize="$8" color="$color">
-              Import Dreams
+          <YStack padding="$4" paddingBottom="$2" space="$1">
+            <Text fontFamily="$heading" fontSize="$7" fontWeight="bold" color="$color">
+              Review Import
             </Text>
-            <Text fontFamily="$body" fontSize="$3" color="$gray10">
-              {selectedCount} of {imports.length} selected
+            <Text fontSize="$4" color="$gray10" fontFamily="$body">
+              {includedEntries.length} entr{includedEntries.length === 1 ? 'y' : 'ies'} from {totalFiles} file{totalFiles === 1 ? '' : 's'}
             </Text>
           </YStack>
 
-          {/* Source info */}
-          <XStack
-            backgroundColor="$backgroundStrong"
-            borderRadius={16}
-            padding="$3"
-            alignItems="center"
-            gap="$3"
-          >
-            <FolderOpen size={18} color="$gray10" />
-            <Text flex={1} fontFamily="$body" fontSize="$3" color="$gray10">
-              Markdown &amp; text files
-            </Text>
-            <XStack alignItems="center" gap="$1">
-              <Shield size={14} color="$gray10" />
-              <Text fontFamily="$body" fontSize="$2" color="$gray10">
-                Processed locally
-              </Text>
+          {/* Options */}
+          <Pressable onPress={() => setOptionsExpanded(!optionsExpanded)}>
+            <XStack
+              paddingHorizontal="$4"
+              paddingVertical="$2"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <Text fontSize="$4" fontWeight="600" color="$gray10" fontFamily="$body">Options</Text>
+              {optionsExpanded
+                ? <ChevronUp size={18} color="$gray10" />
+                : <ChevronDown size={18} color="$gray10" />
+              }
             </XStack>
-          </XStack>
+          </Pressable>
 
-          {/* Progress bar (during import) */}
-          {importing && (
-            <YStack gap="$2">
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${importProgress * 100}%` }]} />
-              </View>
-              <Text fontFamily="$body" fontSize="$2" color="$gray10" textAlign="center">
-                Importing...
+          {optionsExpanded && (
+            <YStack
+              paddingHorizontal="$4"
+              paddingBottom="$3"
+              space="$3"
+            >
+              <Text fontSize="$2" color="$gray10" fontFamily="$body">
+                These options were applied during parsing. Changing them will re-process the files in a future update.
               </Text>
+
+              <XStack alignItems="center" justifyContent="space-between">
+                <XStack alignItems="center" space="$2" flex={1}>
+                  <Calendar size={18} color="$gray10" />
+                  <Text fontSize="$3" fontFamily="$body" color="$color">Use dates found in content</Text>
+                </XStack>
+                <Switch size="$3" checked={true} disabled native />
+              </XStack>
+
+              <XStack alignItems="center" justifyContent="space-between">
+                <XStack alignItems="center" space="$2" flex={1}>
+                  <SplitSquareVertical size={18} color="$gray10" />
+                  <Text fontSize="$3" fontFamily="$body" color="$color">Split files by date headers</Text>
+                </XStack>
+                <Switch size="$3" checked={true} disabled native />
+              </XStack>
             </YStack>
           )}
 
-          {/* Dream list */}
-          <FlatList
-            data={imports}
-            keyExtractor={(_, i) => String(i)}
-            contentContainerStyle={styles.listContent}
-            renderItem={({ item, index }) => (
-              <XStack
-                backgroundColor="$backgroundStrong"
-                borderRadius={16}
-                padding="$3"
-                marginBottom="$2"
-                gap="$3"
-                alignItems="flex-start"
-                pressStyle={{ opacity: 0.8 }}
-                onPress={() => toggleSelection(index)}
-              >
-                <Checkbox
-                  checked={item.selected}
-                  onCheckedChange={() => toggleSelection(index)}
-                  size="$4"
-                  marginTop="$1"
-                  borderRadius={8}
-                >
-                  <Checkbox.Indicator>
-                    <Check size={16} />
-                  </Checkbox.Indicator>
-                </Checkbox>
-                <YStack flex={1} gap="$1">
-                  <Text
-                    fontFamily="$heading"
-                    fontSize="$4"
-                    numberOfLines={2}
-                    color="$color"
-                  >
-                    {item.content}
-                  </Text>
-                  {item.dateCreated && (
-                    <Text
-                      fontSize="$2"
-                      color="$gray10"
-                      fontFamily="$body"
-                      letterSpacing={1}
-                      textTransform="uppercase"
-                    >
-                      {new Date(item.dateCreated).toLocaleDateString()}
-                    </Text>
-                  )}
-                </YStack>
-              </XStack>
-            )}
-          />
+          <Separator />
 
-          {/* Import button */}
-          <LinearGradient
-            colors={selectedCount > 0 ? ['#ffb77d', '#6e3900'] : ['#2e3c4f', '#1a2a3f']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.importButton}
+          {/* Entry List */}
+          <YStack flex={1} paddingHorizontal="$4" paddingTop="$2">
+            <LegendList
+              data={entries}
+              estimatedItemSize={100}
+              keyExtractor={(_, index) => String(index)}
+              renderItem={({ item, index }) => (
+                <EntryCard
+                  entry={item}
+                  index={index}
+                  isExpanded={expandedEntry === index}
+                  onToggleExclude={() => toggleExclude(index)}
+                  onToggleExpand={() => toggleExpand(index)}
+                />
+              )}
+              ItemSeparatorComponent={() => <YStack height={8} />}
+              contentContainerStyle={{ paddingBottom: 16 }}
+            />
+          </YStack>
+
+          {/* Footer */}
+          <YStack
+            padding="$4"
+            paddingTop="$2"
+            borderTopWidth={1}
+            borderTopColor="$gray4"
+            space="$2"
           >
             <Button
-              unstyled
+              size="$5"
+              backgroundColor="$accentBackground"
+              color="white"
+              fontWeight="bold"
+              fontFamily="$body"
+              borderRadius="$4"
               onPress={handleImport}
-              disabled={loading || selectedCount === 0}
-              pressStyle={{ opacity: 0.8, scale: 0.98 }}
-              width="100%"
-              paddingVertical="$4"
-              alignItems="center"
+              disabled={isImporting || includedEntries.length === 0}
+              opacity={isImporting || includedEntries.length === 0 ? 0.6 : 1}
+              icon={<Check size={20} color="white" />}
             >
-              <Text
-                fontFamily="$body"
-                fontWeight="700"
-                fontSize="$4"
-                color={selectedCount > 0 ? '#643400' : '$gray8'}
-              >
-                {loading ? 'Importing...' : `Import ${selectedCount} Dream${selectedCount !== 1 ? 's' : ''}`}
-              </Text>
+              {isImporting
+                ? 'Importing...'
+                : `Import ${includedEntries.length} entr${includedEntries.length === 1 ? 'y' : 'ies'}`
+              }
             </Button>
-          </LinearGradient>
+
+            <Button
+              size="$4"
+              variant="outlined"
+              borderRadius="$4"
+              fontFamily="$body"
+              onPress={() => router.back()}
+              disabled={isImporting}
+            >
+              Cancel
+            </Button>
+          </YStack>
         </YStack>
       </SafeAreaView>
     </View>
   );
 }
 
+// -- Entry Card --
+
+function EntryCard({
+  entry,
+  index,
+  isExpanded,
+  onToggleExclude,
+  onToggleExpand,
+}: {
+  entry: ReviewEntry;
+  index: number;
+  isExpanded: boolean;
+  onToggleExclude: () => void;
+  onToggleExpand: () => void;
+}) {
+  const dateStr = new Date(entry.dateCreated).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+
+  const preview = entry.content.length > 120
+    ? entry.content.slice(0, 120) + '...'
+    : entry.content;
+
+  return (
+    <YStack
+      backgroundColor="$backgroundStrong"
+      borderRadius={16}
+      borderWidth={1}
+      borderColor={entry.excluded ? '$gray4' : '$gray6'}
+      opacity={entry.excluded ? 0.5 : 1}
+      overflow="hidden"
+    >
+      <Pressable onPress={onToggleExpand}>
+        <YStack padding="$3" space="$1.5">
+          <XStack justifyContent="space-between" alignItems="center">
+            <Text
+              fontSize="$4"
+              fontWeight="bold"
+              fontFamily="$heading"
+              flex={1}
+              numberOfLines={1}
+              color="$color"
+            >
+              {entry.title ?? `Entry ${index + 1}`}
+            </Text>
+            <Text fontSize="$2" color="$gray10" fontFamily="$body">{dateStr}</Text>
+          </XStack>
+
+          <Text fontSize="$3" color="$gray10" fontFamily="$body" numberOfLines={isExpanded ? undefined : 2}>
+            {isExpanded ? entry.content : preview}
+          </Text>
+
+          <XStack justifyContent="space-between" alignItems="center" paddingTop="$1">
+            <Text fontSize="$1" color="$gray8" fontFamily="$body">{entry.sourceFile}</Text>
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation?.();
+                onToggleExclude();
+              }}
+              hitSlop={8}
+            >
+              <XStack alignItems="center" space="$1">
+                <Trash2 size={14} color={entry.excluded ? '$accentBackground' : '$red10'} />
+                <Text fontSize="$2" fontFamily="$body" color={entry.excluded ? '$accentBackground' : '$red10'}>
+                  {entry.excluded ? 'Include' : 'Exclude'}
+                </Text>
+              </XStack>
+            </Pressable>
+          </XStack>
+        </YStack>
+      </Pressable>
+    </YStack>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  listContent: {
-    paddingBottom: 8,
-  },
-  importButton: {
-    borderRadius: 9999,
-    overflow: 'hidden',
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: 'rgba(33,72,125,0.15)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#ffb77d',
-    borderRadius: 2,
   },
 });

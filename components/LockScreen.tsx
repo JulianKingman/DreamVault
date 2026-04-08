@@ -1,15 +1,14 @@
 import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
 import { YStack, Text, Button } from 'tamagui';
 import { Lock } from '@tamagui/lucide-icons';
 import { useAuth } from '../contexts/AuthContext';
 
 export function LockScreen() {
-  const { authenticate } = useAuth();
+  const { authenticate, isFirstLaunch } = useAuth();
 
   useEffect(() => {
     authenticate();
-  }, []);
+  }, [authenticate]);
 
   return (
     <YStack
@@ -29,7 +28,9 @@ export function LockScreen() {
         Dream Vault
       </Text>
       <Text fontSize="$4" color="$gray10">
-        Authenticate to access your dreams
+        {isFirstLaunch
+          ? 'Set up biometric protection for your dreams'
+          : 'Authenticate to access your dreams'}
       </Text>
       <Button size="$5" theme="active" onPress={authenticate}>
         Unlock

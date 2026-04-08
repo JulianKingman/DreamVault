@@ -1,35 +1,64 @@
-import * as SQLite from 'expo-sqlite';
+import { open, type DB } from '@op-engineering/op-sqlite';
 import type { Dream, Tag, SyncDreamPayload } from '../types';
 import { runMigrations } from './migrations';
-import { encrypt, decrypt } from './crypto';
 
-const db = SQLite.openDatabaseSync('dreams.db');
+let db: DB | null = null;
 
-let initialized = false;
+export function initDatabase(encryptionKey: string): void {
+  if (db) return;
+  db = open({ name: 'dreams.db', encryptionKey });
+  createSchema();
+  runMigrations(db);
+}
 
-export const initDatabase = (): void => {
-  if (initialized) return;
-  db.execSync(`
+export function closeDatabase(): void {
+  if (db) {
+    db.close();
+    db = null;
+  }
+}
+
+export function getDb(): DB {
+  if (!db) throw new Error('Database not initialized. Call initDatabase() first.');
+  return db;
+}
+
+function createSchema(): void {
+  if (!db) return;
+  db.executeSync(`
     CREATE TABLE IF NOT EXISTS dreams (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       content TEXT,
       dateCreated TEXT,
       dateModified TEXT,
-      isFavorite INTEGER DEFAULT 0
+      isFavorite INTEGER DEFAULT 0,
+      title TEXT,
+      intention TEXT,
+      notes TEXT,
+      uuid TEXT UNIQUE,
+      lastSyncedAt TEXT,
+      isDeleted INTEGER DEFAULT 0
     )
   `);
-  // Ensure isFavorite exists on tables created before it was in the schema
-  const columns = db.getAllSync<{ name: string }>(`PRAGMA table_info(dreams)`);
-  const colNames = columns.map(c => c.name);
-  if (!colNames.includes('isFavorite')) {
-    db.execSync(`ALTER TABLE dreams ADD COLUMN isFavorite INTEGER DEFAULT 0`);
-  }
-  runMigrations();
-  initialized = true;
-};
+  db.executeSync(`
+    CREATE TABLE IF NOT EXISTS tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL
+    )
+  `);
+  db.executeSync(`
+    CREATE TABLE IF NOT EXISTS dream_tags (
+      dream_id INTEGER NOT NULL,
+      tag_id INTEGER NOT NULL,
+      PRIMARY KEY (dream_id, tag_id),
+      FOREIGN KEY (dream_id) REFERENCES dreams(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+    )
+  `);
+  db.executeSync('CREATE UNIQUE INDEX IF NOT EXISTS idx_dreams_uuid ON dreams(uuid)');
+}
 
-// Eagerly initialize so queries never run against an unmigrated schema
-initDatabase();
+// Helpers
 
 function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -39,32 +68,36 @@ function generateUUID(): string {
   });
 }
 
-const rowToDream = (row: any): Dream => ({
-  ...row,
-  dateCreated: new Date(row.dateCreated),
-  dateModified: new Date(row.dateModified),
-  isFavorite: Boolean(row.isFavorite),
-  title: row.title ?? null,
-  intention: row.intention ?? null,
-  notes: row.notes ?? null,
-  uuid: row.uuid ?? undefined,
-  lastSyncedAt: row.lastSyncedAt ? new Date(row.lastSyncedAt) : null,
-  isDeleted: Boolean(row.isDeleted),
-});
+export function rowToDream(row: any): Dream {
+  return {
+    ...row,
+    dateCreated: new Date(row.dateCreated),
+    dateModified: new Date(row.dateModified),
+    isFavorite: Boolean(row.isFavorite),
+    title: row.title ?? null,
+    intention: row.intention ?? null,
+    notes: row.notes ?? null,
+    uuid: row.uuid ?? undefined,
+    lastSyncedAt: row.lastSyncedAt ? new Date(row.lastSyncedAt) : null,
+    isDeleted: Boolean(row.isDeleted),
+  };
+}
 
-const attachTags = (dream: Dream): Dream => {
-  const tags = db.getAllSync<Tag>(
+export function attachTags(dream: Dream): Dream {
+  const result = getDb().executeSync(
     `SELECT t.id, t.name FROM tags t
      JOIN dream_tags dt ON dt.tag_id = t.id
      WHERE dt.dream_id = ?`,
     [dream.id]
   );
-  return { ...dream, tags };
-};
+  return { ...dream, tags: (result.rows ?? []) as unknown as Tag[] };
+}
+
+// Read operations
 
 export const getDreams = (search = '', favoritesOnly = false): Dream[] => {
   let query = 'SELECT * FROM dreams WHERE content LIKE ? AND (isDeleted = 0 OR isDeleted IS NULL)';
-  const params: string[] = [`%${search}%`];
+  const params: (string | number)[] = [`%${search}%`];
 
   if (favoritesOnly) {
     query += ' AND isFavorite = 1';
@@ -72,37 +105,35 @@ export const getDreams = (search = '', favoritesOnly = false): Dream[] => {
 
   query += ' ORDER BY dateModified DESC';
 
-  const result = db.getAllSync<any>(query, params);
-  return result.map(row => attachTags(rowToDream(row)));
+  const result = getDb().executeSync(query, params);
+  return (result.rows ?? []).map((row: any) => attachTags(rowToDream(row)));
 };
 
 export const getDreamById = (id: number): Dream | null => {
-  const row = db.getFirstSync<any>(
-    'SELECT * FROM dreams WHERE id = ?',
-    [id]
-  );
+  const result = getDb().executeSync('SELECT * FROM dreams WHERE id = ?', [id]);
+  const row = result.rows?.[0];
   if (!row) return null;
   return attachTags(rowToDream(row));
 };
 
 export const getDreamByUUID = (uuid: string): Dream | null => {
-  const row = db.getFirstSync<any>(
-    'SELECT * FROM dreams WHERE uuid = ?',
-    [uuid]
-  );
+  const result = getDb().executeSync('SELECT * FROM dreams WHERE uuid = ?', [uuid]);
+  const row = result.rows?.[0];
   if (!row) return null;
   return attachTags(rowToDream(row));
 };
 
+// Write operations
+
 export const addDream = (content: string, title?: string, intention?: string, notes?: string): Dream => {
   const now = new Date().toISOString();
   const uuid = generateUUID();
-  const result = db.runSync(
+  const result = getDb().executeSync(
     'INSERT INTO dreams (content, dateCreated, dateModified, title, intention, notes, uuid) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [content, now, now, title ?? null, intention ?? null, notes ?? null, uuid]
   );
   return {
-    id: result.lastInsertRowId,
+    id: result.insertId!,
     content,
     dateCreated: new Date(now),
     dateModified: new Date(now),
@@ -117,22 +148,21 @@ export const addDream = (content: string, title?: string, intention?: string, no
 
 export const updateDream = (dream: Dream): void => {
   const now = new Date().toISOString();
-  db.runSync(
+  getDb().executeSync(
     'UPDATE dreams SET content = ?, dateModified = ?, isFavorite = ?, title = ?, intention = ?, notes = ? WHERE id = ?',
     [dream.content, now, dream.isFavorite ? 1 : 0, dream.title, dream.intention, dream.notes, dream.id]
   );
 };
 
 export const toggleFavorite = (id: number): void => {
-  db.runSync(
+  getDb().executeSync(
     'UPDATE dreams SET isFavorite = ((isFavorite | 1) - (isFavorite & 1)), dateModified = ? WHERE id = ?',
     [new Date().toISOString(), id]
   );
 };
 
 export const deleteDream = (id: number): void => {
-  // Soft-delete for sync support
-  db.runSync(
+  getDb().executeSync(
     'UPDATE dreams SET isDeleted = 1, dateModified = ? WHERE id = ?',
     [new Date().toISOString(), id]
   );
@@ -141,28 +171,26 @@ export const deleteDream = (id: number): void => {
 // Tag operations
 
 export const getAllTags = (): Tag[] => {
-  return db.getAllSync<Tag>('SELECT * FROM tags ORDER BY name');
+  const result = getDb().executeSync('SELECT * FROM tags ORDER BY name');
+  return (result.rows ?? []) as unknown as Tag[];
 };
 
 export const getOrCreateTag = (name: string): Tag => {
   const trimmed = name.trim().toLowerCase();
-  const existing = db.getFirstSync<Tag>(
-    'SELECT * FROM tags WHERE name = ?',
-    [trimmed]
-  );
-  if (existing) return existing;
+  const existing = getDb().executeSync('SELECT * FROM tags WHERE name = ?', [trimmed]);
+  if (existing.rows?.[0]) return existing.rows[0] as unknown as Tag;
 
-  const result = db.runSync('INSERT INTO tags (name) VALUES (?)', [trimmed]);
-  return { id: result.lastInsertRowId, name: trimmed };
+  const result = getDb().executeSync('INSERT INTO tags (name) VALUES (?)', [trimmed]);
+  return { id: result.insertId!, name: trimmed };
 };
 
 export const setDreamTags = (dreamId: number, tagNames: string[]): Tag[] => {
-  db.runSync('DELETE FROM dream_tags WHERE dream_id = ?', [dreamId]);
+  getDb().executeSync('DELETE FROM dream_tags WHERE dream_id = ?', [dreamId]);
   const tags: Tag[] = [];
   for (const name of tagNames) {
     if (!name.trim()) continue;
     const tag = getOrCreateTag(name);
-    db.runSync('INSERT INTO dream_tags (dream_id, tag_id) VALUES (?, ?)', [dreamId, tag.id]);
+    getDb().executeSync('INSERT INTO dream_tags (dream_id, tag_id) VALUES (?, ?)', [dreamId, tag.id]);
     tags.push(tag);
   }
   return tags;
@@ -170,90 +198,103 @@ export const setDreamTags = (dreamId: number, tagNames: string[]): Tag[] => {
 
 // Bulk operations
 
-export const addDreamBulk = (dreams: { content: string; title?: string; dateCreated?: string }[]): void => {
-  db.execSync('BEGIN TRANSACTION');
+export const addDreamBulk = (dreams: { content: string; title?: string; dateCreated?: string }[]): number[] => {
+  const d = getDb();
+  const ids: number[] = [];
+  d.executeSync('BEGIN TRANSACTION');
   try {
     for (const dream of dreams) {
       const now = new Date().toISOString();
       const created = dream.dateCreated ?? now;
       const uuid = generateUUID();
-      db.runSync(
+      const result = d.executeSync(
         'INSERT INTO dreams (content, dateCreated, dateModified, title, uuid) VALUES (?, ?, ?, ?, ?)',
         [dream.content, created, now, dream.title ?? null, uuid]
       );
+      if (result.insertId != null) ids.push(result.insertId);
     }
-    db.execSync('COMMIT');
+    d.executeSync('COMMIT');
   } catch (e) {
-    db.execSync('ROLLBACK');
+    d.executeSync('ROLLBACK');
     throw e;
   }
+  return ids;
+};
+
+// Import history operations
+
+export interface ImportRecord {
+  id: number;
+  content_hash: string;
+  filename: string;
+  imported_at: string;
+  entry_count: number;
+  dream_ids: number[];
+}
+
+export const findImportByHash = (hash: string): ImportRecord | null => {
+  const result = getDb().executeSync(
+    'SELECT * FROM import_history WHERE content_hash = ? ORDER BY imported_at DESC LIMIT 1',
+    [hash]
+  );
+  const row = result.rows?.[0] as any;
+  if (!row) return null;
+  return {
+    ...row,
+    dream_ids: JSON.parse(row.dream_ids),
+  };
+};
+
+export const recordImport = (hash: string, filename: string, dreamIds: number[]): void => {
+  getDb().executeSync(
+    'INSERT INTO import_history (content_hash, filename, imported_at, entry_count, dream_ids) VALUES (?, ?, ?, ?, ?)',
+    [hash, filename, new Date().toISOString(), dreamIds.length, JSON.stringify(dreamIds)]
+  );
+};
+
+export const deleteImportedDreams = (dreamIds: number[]): void => {
+  if (dreamIds.length === 0) return;
+  const d = getDb();
+  d.executeSync('BEGIN TRANSACTION');
+  try {
+    for (const id of dreamIds) {
+      d.executeSync('DELETE FROM dream_tags WHERE dream_id = ?', [id]);
+      d.executeSync('DELETE FROM dreams WHERE id = ?', [id]);
+    }
+    d.executeSync('COMMIT');
+  } catch (e) {
+    d.executeSync('ROLLBACK');
+    throw e;
+  }
+};
+
+export const deleteImportRecord = (id: number): void => {
+  getDb().executeSync('DELETE FROM import_history WHERE id = ?', [id]);
 };
 
 // Sync operations
 
 export const getModifiedSince = (since: Date): Dream[] => {
-  const result = db.getAllSync<any>(
+  const result = getDb().executeSync(
     'SELECT * FROM dreams WHERE dateModified > ? ORDER BY dateModified ASC',
     [since.toISOString()]
   );
-  return result.map(row => attachTags(rowToDream(row)));
+  return (result.rows ?? []).map((row: any) => attachTags(rowToDream(row)));
 };
 
 export const markSynced = (ids: number[]): void => {
   const now = new Date().toISOString();
   for (const id of ids) {
-    db.runSync('UPDATE dreams SET lastSyncedAt = ? WHERE id = ?', [now, id]);
+    getDb().executeSync('UPDATE dreams SET lastSyncedAt = ? WHERE id = ?', [now, id]);
   }
 };
-
-// Encryption operations
-
-export async function encryptDream(id: number): Promise<void> {
-  const row = db.getFirstSync<any>('SELECT * FROM dreams WHERE id = ?', [id]);
-  if (!row || row.isEncrypted) return;
-
-  const encContent = row.content ? await encrypt(row.content) : null;
-  const encTitle = row.title ? await encrypt(row.title) : null;
-  const encIntention = row.intention ? await encrypt(row.intention) : null;
-  const encNotes = row.notes ? await encrypt(row.notes) : null;
-
-  db.runSync(
-    'UPDATE dreams SET content = ?, title = ?, intention = ?, notes = ?, isEncrypted = 1 WHERE id = ?',
-    [encContent, encTitle, encIntention, encNotes, id]
-  );
-}
-
-export async function decryptDreamFields(dream: Dream): Promise<Dream> {
-  const row = db.getFirstSync<any>('SELECT isEncrypted FROM dreams WHERE id = ?', [dream.id]);
-  if (!row?.isEncrypted) return dream;
-
-  return {
-    ...dream,
-    content: dream.content ? await decrypt(dream.content) : dream.content,
-    title: dream.title ? await decrypt(dream.title) : dream.title,
-    intention: dream.intention ? await decrypt(dream.intention) : dream.intention,
-    notes: dream.notes ? await decrypt(dream.notes) : dream.notes,
-  };
-}
-
-export async function encryptAllDreams(onProgress?: (done: number, total: number) => void): Promise<number> {
-  const rows = db.getAllSync<{ id: number }>('SELECT id FROM dreams WHERE isEncrypted = 0 OR isEncrypted IS NULL');
-  let done = 0;
-  for (const row of rows) {
-    await encryptDream(row.id);
-    done++;
-    onProgress?.(done, rows.length);
-  }
-  return done;
-}
 
 export const upsertFromSync = (payload: SyncDreamPayload): void => {
   const existing = getDreamByUUID(payload.uuid);
   if (existing) {
-    // Last-write-wins: only update if remote is newer
     const remoteModified = new Date(payload.dateModified);
     if (remoteModified > existing.dateModified) {
-      db.runSync(
+      getDb().executeSync(
         `UPDATE dreams SET content = ?, title = ?, intention = ?, notes = ?,
          isFavorite = ?, dateModified = ?, isDeleted = ?, lastSyncedAt = ?
          WHERE uuid = ?`,
@@ -269,9 +310,8 @@ export const upsertFromSync = (payload: SyncDreamPayload): void => {
       }
     }
   } else {
-    // Insert new dream from cloud
     const uuid = payload.uuid;
-    const result = db.runSync(
+    const result = getDb().executeSync(
       `INSERT INTO dreams (content, dateCreated, dateModified, isFavorite, title, intention, notes, uuid, isDeleted, lastSyncedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -281,7 +321,7 @@ export const upsertFromSync = (payload: SyncDreamPayload): void => {
       ]
     );
     if (payload.tags.length > 0) {
-      setDreamTags(result.lastInsertRowId, payload.tags);
+      setDreamTags(result.insertId!, payload.tags);
     }
   }
 };

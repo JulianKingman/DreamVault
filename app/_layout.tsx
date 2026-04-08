@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import 'expo-dev-client';
 import { Stack } from 'expo-router';
 import { TamaguiProvider, Theme, YStack } from 'tamagui';
 import { useFonts } from 'expo-font';
@@ -10,7 +9,6 @@ import { ThemeProvider } from '@react-navigation/core';
 import { LinearGradient } from 'expo-linear-gradient';
 import '../tamagui-web.css';
 import config from '../tamagui.config';
-import { initDatabase } from '../utils/database';
 import {
   DarkTheme,
   DefaultTheme,
@@ -73,16 +71,24 @@ function RootLayoutInner() {
 
   useAutoSync();
 
-  useEffect(() => {
-    initDatabase();
-  }, []);
-
   const navTheme =
     resolvedTheme === 'midnight'
       ? MidnightNavTheme
       : resolvedTheme === 'light'
         ? TwilightLightNavTheme
         : TwilightNavTheme;
+
+  if (!isAuthenticated) {
+    return (
+      <TamaguiProvider config={config} defaultTheme={resolvedTheme}>
+        <ThemeProvider value={navTheme}>
+          <Theme name={resolvedTheme}>
+            <LockScreen />
+          </Theme>
+        </ThemeProvider>
+      </TamaguiProvider>
+    );
+  }
 
   return (
     <TamaguiProvider config={config} defaultTheme={resolvedTheme}>
@@ -95,6 +101,10 @@ function RootLayoutInner() {
               options={{ presentation: 'modal', title: 'New Dream Entry' }}
             />
             <Stack.Screen name="view-dream" options={{ title: 'View Dream' }} />
+            <Stack.Screen
+              name="import"
+              options={{ presentation: 'modal', title: 'Import Dreams' }}
+            />
             <Stack.Screen
               name="import-review"
               options={{ presentation: 'modal', title: 'Review Imports' }}
@@ -124,7 +134,6 @@ function RootLayoutInner() {
               </LinearGradient>
             </YStack>
           )}
-          {isAuthEnabled && !isAuthenticated && <LockScreen />}
         </Theme>
       </ThemeProvider>
     </TamaguiProvider>

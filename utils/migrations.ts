@@ -1,91 +1,58 @@
-import * as SQLite from 'expo-sqlite';
-
-const db = SQLite.openDatabaseSync('dreams.db');
+import type { DB } from '@op-engineering/op-sqlite';
 
 type Migration = {
   version: number;
-  up: (db: SQLite.SQLiteDatabase) => void;
+  up: (db: DB) => void;
 };
 
 const migrations: Migration[] = [
+  // v1 is the initial schema created in createSchema() — no migration needed.
   {
     version: 2,
     up: (db) => {
-      db.execSync(`ALTER TABLE dreams ADD COLUMN title TEXT`);
-      db.execSync(`ALTER TABLE dreams ADD COLUMN intention TEXT`);
-      db.execSync(`ALTER TABLE dreams ADD COLUMN notes TEXT`);
-      db.execSync(`
-        CREATE TABLE IF NOT EXISTS tags (
+      db.executeSync(`
+        CREATE TABLE IF NOT EXISTS import_history (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT UNIQUE NOT NULL
+          content_hash TEXT NOT NULL,
+          filename TEXT NOT NULL,
+          imported_at TEXT NOT NULL,
+          entry_count INTEGER NOT NULL,
+          dream_ids TEXT NOT NULL
         )
       `);
-      db.execSync(`
-        CREATE TABLE IF NOT EXISTS dream_tags (
-          dream_id INTEGER NOT NULL,
-          tag_id INTEGER NOT NULL,
-          PRIMARY KEY (dream_id, tag_id),
-          FOREIGN KEY (dream_id) REFERENCES dreams(id) ON DELETE CASCADE,
-          FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
-        )
-      `);
+      db.executeSync(
+        'CREATE INDEX IF NOT EXISTS idx_import_hash ON import_history(content_hash)'
+      );
     },
   },
   {
     version: 3,
     up: (db) => {
-      db.execSync(`ALTER TABLE dreams ADD COLUMN uuid TEXT`);
-      db.execSync(`ALTER TABLE dreams ADD COLUMN lastSyncedAt TEXT`);
-      db.execSync(`ALTER TABLE dreams ADD COLUMN isDeleted INTEGER DEFAULT 0`);
-      // Backfill UUIDs for existing rows
-      const rows = db.getAllSync<{ id: number }>('SELECT id FROM dreams WHERE uuid IS NULL');
-      for (const row of rows) {
-        const uuid = generateUUID();
-        db.runSync('UPDATE dreams SET uuid = ? WHERE id = ?', [uuid, row.id]);
-      }
-      db.execSync(`CREATE UNIQUE INDEX IF NOT EXISTS idx_dreams_uuid ON dreams(uuid)`);
+      db.executeSync(`ALTER TABLE dreams ADD COLUMN isEncrypted INTEGER DEFAULT 0`);
     },
   },
   {
     version: 4,
     up: (db) => {
-      db.execSync(`ALTER TABLE dreams ADD COLUMN isEncrypted INTEGER DEFAULT 0`);
-    },
-  },
-  {
-    version: 5,
-    up: (db) => {
-      db.execSync(`ALTER TABLE dreams ADD COLUMN imageUri TEXT`);
+      db.executeSync(`ALTER TABLE dreams ADD COLUMN imageUri TEXT`);
     },
   },
 ];
 
-function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
-export const runMigrations = (): void => {
-  db.execSync(`
+export function runMigrations(db: DB): void {
+  db.executeSync(`
     CREATE TABLE IF NOT EXISTS schema_version (
       version INTEGER PRIMARY KEY
     )
   `);
 
-  const row = db.getFirstSync<{ version: number }>(
-    'SELECT MAX(version) as version FROM schema_version'
-  );
-  const currentVersion = row?.version ?? 1;
+  const result = db.executeSync('SELECT MAX(version) as version FROM schema_version');
+  const currentVersion = (result.rows?.[0] as any)?.version ?? 1;
 
   for (const migration of migrations) {
     if (migration.version > currentVersion) {
       migration.up(db);
-      db.runSync('INSERT INTO schema_version (version) VALUES (?)', [
-        migration.version,
-      ]);
+      db.executeSync('INSERT INTO schema_version (version) VALUES (?)', [migration.version]);
     }
   }
-};
+}

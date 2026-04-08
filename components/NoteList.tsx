@@ -1,6 +1,6 @@
 import React, { useState, useCallback, ReactElement, useRef } from 'react';
-import { FlatList, StyleSheet, Image, View, TextInput } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { StyleSheet, Image, View, TextInput } from 'react-native';
+import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { Text, YStack, XStack, Input, Button } from 'tamagui';
 import { Trash2 } from '@tamagui/lucide-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,8 +11,6 @@ import { deleteDream } from '@/utils/database';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Alert } from 'react-native';
 
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<Dream>);
-
 interface NoteListProps {
   favoritesOnly?: boolean;
   searchForm?: boolean;
@@ -22,7 +20,6 @@ interface NoteListProps {
   externalSearch?: string;
   headerComponent?: ReactElement;
   onScroll?: any;
-  animated?: boolean;
 }
 
 export function NoteList({
@@ -33,11 +30,10 @@ export function NoteList({
   externalSearch,
   headerComponent,
   onScroll,
-  animated = false,
 }: NoteListProps) {
   const [internalSearch, setInternalSearch] = useState('');
   const searchTerm = externalSearch ?? internalSearch;
-  const dreams = useDreams({ search: searchTerm, favoritesOnly });
+  const { dreams } = useDreams({ search: searchTerm, favoritesOnly });
   const searchRef = useRef<TextInput>(null);
 
   const handleDelete = useCallback((id: number) => {
@@ -242,18 +238,18 @@ export function NoteList({
 
   const listFooter = showBuiltInSearch && searchPosition === 'bottom' ? searchInput : null;
 
-  const ListComponent = animated ? AnimatedFlatList : FlatList;
-
   return (
-    <ListComponent
+    <AnimatedLegendList
       data={dreams}
-      renderItem={renderItem}
+      estimatedItemSize={120}
       keyExtractor={(item: Dream) => `dream-${item.id}`}
+      renderItem={renderItem}
       contentContainerStyle={styles.listContent}
       ListHeaderComponent={listHeader}
       ListFooterComponent={listFooter}
       onScroll={onScroll}
       scrollEventThrottle={16}
+      recycleItems={false}
     />
   );
 }

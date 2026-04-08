@@ -1,33 +1,50 @@
-import { useState, useEffect } from 'react';
-import * as SQLite from 'expo-sqlite';
+import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { getDb, getDreams, rowToDream, attachTags } from '../utils/database';
 import type { Dream } from '../types';
-import { getDreams } from '../utils/database';
-
-const db = SQLite.openDatabaseSync('dreams.db');
 
 export function useDreams({ search = '', favoritesOnly = false }) {
   const [dreams, setDreams] = useState<Dream[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  // Re-fetch when screen comes into focus (e.g. after import dismisses)
+  useFocusEffect(
+    useCallback(() => {
+      setDreams(getDreams(search, favoritesOnly));
+    }, [search, favoritesOnly])
+  );
 
   useEffect(() => {
-    const loadDreams = () => {
-      const fetchedDreams = getDreams(search, favoritesOnly);
-      setDreams(fetchedDreams);
-    };
+    const db = getDb();
 
-    loadDreams();
+    let query = 'SELECT * FROM dreams WHERE content LIKE ? AND (isDeleted = 0 OR isDeleted IS NULL)';
+    const params: (string | number)[] = [`%${search}%`];
+    if (favoritesOnly) query += ' AND isFavorite = 1';
+    query += ' ORDER BY dateModified DESC';
 
-    const subscription = SQLite.addDatabaseChangeListener(
-      ({ databaseName, databaseFilePath, tableName, rowId }) => {
-        if (databaseName === 'dreams.db' && tableName === 'dreams') {
-          loadDreams();
-        }
-      }
-    );
+    // reactiveExecute re-runs the query whenever the specified tables change
+    // and fires the callback with the new results.
+    const unsubscribe = db.reactiveExecute({
+      query,
+      arguments: params,
+      fireOn: [{ table: 'dreams' }],
+      callback: (result) => {
+        const rows = result.rows ?? [];
+        setDreams(rows.map((row: any) => attachTags(rowToDream(row))));
+      },
+    });
+
+    // Load initial data — reactiveExecute may not fire on subscribe
+    setDreams(getDreams(search, favoritesOnly));
 
     return () => {
-      subscription.remove();
+      unsubscribe();
     };
-  }, [search, favoritesOnly]);
+  }, [search, favoritesOnly, refreshKey]);
 
-  return dreams;
+  return { dreams, refresh };
 }

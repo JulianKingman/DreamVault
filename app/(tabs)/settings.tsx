@@ -35,8 +35,6 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAI } from '../../hooks/useAI';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSync } from '../../contexts/SyncContext';
-import { encryptAllDreams } from '../../utils/database';
-import { isEncryptionAvailable } from '../../utils/crypto';
 import { AtmosphericBackground } from '../../components/AtmosphericBackground';
 
 export default function SettingsScreen() {
@@ -44,15 +42,12 @@ export default function SettingsScreen() {
   const { isAuthEnabled, setAuthEnabled } = useAuth();
   const { syncStatus, lastSyncTime, cloudAvailable, syncNow, checkCloudAvailability } = useSync();
   const [hasBiometrics, setHasBiometrics] = useState(false);
-  const [hasEncryption, setHasEncryption] = useState(false);
-  const [encrypting, setEncrypting] = useState(false);
   const { available: aiAvailable } = useAI();
   const router = useRouter();
 
   useEffect(() => {
     LocalAuthentication.hasHardwareAsync().then(setHasBiometrics);
     checkCloudAvailability();
-    isEncryptionAvailable().then(setHasEncryption);
   }, []);
 
   const handleAuthToggle = async (enabled: boolean) => {
@@ -68,32 +63,8 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleEncryptAll = async () => {
-    Alert.alert(
-      'Encrypt Dreams',
-      'This will encrypt all unencrypted dream content. Your device biometrics will be required to access your dreams. Continue?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Encrypt',
-          onPress: async () => {
-            setEncrypting(true);
-            try {
-              const count = await encryptAllDreams();
-              Alert.alert('Done', `Encrypted ${count} dream(s).`);
-            } catch (e: any) {
-              Alert.alert('Error', e.message ?? 'Failed to encrypt dreams.');
-            } finally {
-              setEncrypting(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const handleImportFromNotes = () => {
-    router.push('/import-review' as any);
+    router.push('/import' as any);
   };
 
   const handleContribute = () => {
@@ -153,34 +124,19 @@ export default function SettingsScreen() {
               </SettingsGroup>
             )}
 
-            {hasEncryption && (
-              <SettingsGroup title="Encryption">
-                <SettingsItem
-                  icon={<Lock size={20} color="$gray10" />}
-                  title="Encrypt existing dreams"
-                  right={
-                    encrypting ? (
-                      <Spinner size="small" />
-                    ) : (
-                      <Button
-                        size="$3"
-                        onPress={handleEncryptAll}
-                        backgroundColor="$backgroundStrong"
-                        borderRadius={9999}
-                        fontFamily="$body"
-                      >
-                        Encrypt
-                      </Button>
-                    )
-                  }
-                />
-                <XStack paddingHorizontal="$4" paddingBottom="$3">
-                  <Text fontSize="$2" color="$gray10" fontFamily="$body">
-                    AES-256-GCM encryption with biometric-protected keys. Post-quantum Kyber KEM wrapping for iCloud sync.
-                  </Text>
-                </XStack>
-              </SettingsGroup>
-            )}
+            <SettingsGroup title="Encryption">
+              <SettingsItem
+                icon={<Lock size={20} color="$gray10" />}
+                title="Encryption"
+                right={<Text color="$gray10" fontSize="$3" fontFamily="$body">AES-256 (Always On)</Text>}
+              />
+              <XStack paddingHorizontal="$4" paddingBottom="$3">
+                <Text fontSize="$2" color="$gray10" fontFamily="$body">
+                  Your dream journal is encrypted on-device with AES-256 via SQLCipher.
+                  Biometric authentication is required to access your data.
+                </Text>
+              </XStack>
+            </SettingsGroup>
 
             <SettingsGroup title="Sync">
               <SettingsItem
