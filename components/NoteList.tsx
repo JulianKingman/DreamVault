@@ -261,7 +261,7 @@ export function NoteList({
 const styles = StyleSheet.create({
   listContent: {
     padding: 16,
-    paddingBottom: 120, // Space for floating tab bar
+    paddingBottom: 180, // Space for search bar + floating tab bar
   },
   imageCard: {
     minHeight: 320,
