@@ -1,9 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { getDb, getDreams, rowToDream, attachTags } from '../utils/database';
 import type { Dream } from '../types';
 
 export function useDreams({ search = '', favoritesOnly = false }) {
   const [dreams, setDreams] = useState<Dream[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  // Re-fetch when screen comes into focus (e.g. after import dismisses)
+  useFocusEffect(
+    useCallback(() => {
+      setDreams(getDreams(search, favoritesOnly));
+    }, [search, favoritesOnly])
+  );
 
   useEffect(() => {
     const db = getDb();
@@ -31,7 +44,7 @@ export function useDreams({ search = '', favoritesOnly = false }) {
     return () => {
       unsubscribe();
     };
-  }, [search, favoritesOnly]);
+  }, [search, favoritesOnly, refreshKey]);
 
-  return dreams;
+  return { dreams, refresh };
 }

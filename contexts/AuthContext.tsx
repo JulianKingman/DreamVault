@@ -15,8 +15,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isFirstLaunch, setIsFirstLaunch] = useState(false);
   const appState = useRef(AppState.currentState);
+  const isAuthenticating = useRef(false);
 
   const authenticate = useCallback(async (): Promise<boolean> => {
+    if (isAuthenticating.current) return false;
+    isAuthenticating.current = true;
     try {
       console.log('[Auth] Starting authentication...');
       const keyExists = await hasDbKey();
@@ -49,19 +52,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error('[Auth] Error:', e);
       return false;
+    } finally {
+      isAuthenticating.current = false;
     }
   }, []);
 
   // Re-lock when app returns from background
+  // Skip re-lock if a biometric prompt is currently showing (inactive→active from system dialog)
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
       if (
         appState.current.match(/inactive|background/) &&
         nextState === 'active' &&
-        isAuthenticated
+        isAuthenticated &&
+        !isAuthenticating.current
       ) {
-        closeDatabase();
-        setIsAuthenticated(false);
+        // Only re-lock if the app was actually in background (not just inactive from a system dialog)
+        if (appState.current === 'background') {
+          closeDatabase();
+          setIsAuthenticated(false);
+        }
       }
       appState.current = nextState;
     });

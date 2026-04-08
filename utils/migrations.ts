@@ -7,13 +7,24 @@ type Migration = {
 
 const migrations: Migration[] = [
   // v1 is the initial schema created in createSchema() — no migration needed.
-  // Future migrations go here, e.g.:
-  // {
-  //   version: 2,
-  //   up: (db) => {
-  //     db.executeSync('ALTER TABLE dreams ADD COLUMN newField TEXT');
-  //   },
-  // },
+  {
+    version: 2,
+    up: (db) => {
+      db.executeSync(`
+        CREATE TABLE IF NOT EXISTS import_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          content_hash TEXT NOT NULL,
+          filename TEXT NOT NULL,
+          imported_at TEXT NOT NULL,
+          entry_count INTEGER NOT NULL,
+          dream_ids TEXT NOT NULL
+        )
+      `);
+      db.executeSync(
+        'CREATE INDEX IF NOT EXISTS idx_import_hash ON import_history(content_hash)'
+      );
+    },
+  },
 ];
 
 export function runMigrations(db: DB): void {

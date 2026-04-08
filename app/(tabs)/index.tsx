@@ -36,7 +36,6 @@ export default function HomeScreen() {
         searchPosition="bottom"
         headerComponent={skyHeader}
         onScroll={scrollHandler}
-        animated
       />
     </SafeAreaView>
   );

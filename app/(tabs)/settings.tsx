@@ -22,13 +22,15 @@ import {
   ExternalLink,
   Shield,
 } from '@tamagui/lucide-icons';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
   const [isDarkMode, setIsDarkMode] = React.useState(colorScheme === 'dark');
 
   const handleImportFromNotes = () => {
-    console.log('Importing from Notes...');
+    router.push('/import' as any);
   };
 
   const handleContribute = () => {

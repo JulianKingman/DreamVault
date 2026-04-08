@@ -44,6 +44,14 @@ function AppContent() {
               options={{ presentation: 'modal', title: 'New Dream Entry' }}
             />
             <Stack.Screen name="view-dream" options={{ title: 'View Dream' }} />
+            <Stack.Screen
+              name="import"
+              options={{ presentation: 'modal', title: 'Import Dreams' }}
+            />
+            <Stack.Screen
+              name="import-review"
+              options={{ title: 'Review Import' }}
+            />
           </Stack>
           {pathname !== '/settings' && (
             <View style={styles.fabContainer}>

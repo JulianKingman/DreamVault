@@ -198,24 +198,78 @@ export const setDreamTags = (dreamId: number, tagNames: string[]): Tag[] => {
 
 // Bulk operations
 
-export const addDreamBulk = (dreams: { content: string; title?: string; dateCreated?: string }[]): void => {
+export const addDreamBulk = (dreams: { content: string; title?: string; dateCreated?: string }[]): number[] => {
   const d = getDb();
+  const ids: number[] = [];
   d.executeSync('BEGIN TRANSACTION');
   try {
     for (const dream of dreams) {
       const now = new Date().toISOString();
       const created = dream.dateCreated ?? now;
       const uuid = generateUUID();
-      d.executeSync(
+      const result = d.executeSync(
         'INSERT INTO dreams (content, dateCreated, dateModified, title, uuid) VALUES (?, ?, ?, ?, ?)',
         [dream.content, created, now, dream.title ?? null, uuid]
       );
+      if (result.insertId != null) ids.push(result.insertId);
     }
     d.executeSync('COMMIT');
   } catch (e) {
     d.executeSync('ROLLBACK');
     throw e;
   }
+  return ids;
+};
+
+// Import history operations
+
+export interface ImportRecord {
+  id: number;
+  content_hash: string;
+  filename: string;
+  imported_at: string;
+  entry_count: number;
+  dream_ids: number[];
+}
+
+export const findImportByHash = (hash: string): ImportRecord | null => {
+  const result = getDb().executeSync(
+    'SELECT * FROM import_history WHERE content_hash = ? ORDER BY imported_at DESC LIMIT 1',
+    [hash]
+  );
+  const row = result.rows?.[0] as any;
+  if (!row) return null;
+  return {
+    ...row,
+    dream_ids: JSON.parse(row.dream_ids),
+  };
+};
+
+export const recordImport = (hash: string, filename: string, dreamIds: number[]): void => {
+  getDb().executeSync(
+    'INSERT INTO import_history (content_hash, filename, imported_at, entry_count, dream_ids) VALUES (?, ?, ?, ?, ?)',
+    [hash, filename, new Date().toISOString(), dreamIds.length, JSON.stringify(dreamIds)]
+  );
+};
+
+export const deleteImportedDreams = (dreamIds: number[]): void => {
+  if (dreamIds.length === 0) return;
+  const d = getDb();
+  d.executeSync('BEGIN TRANSACTION');
+  try {
+    for (const id of dreamIds) {
+      d.executeSync('DELETE FROM dream_tags WHERE dream_id = ?', [id]);
+      d.executeSync('DELETE FROM dreams WHERE id = ?', [id]);
+    }
+    d.executeSync('COMMIT');
+  } catch (e) {
+    d.executeSync('ROLLBACK');
+    throw e;
+  }
+};
+
+export const deleteImportRecord = (id: number): void => {
+  getDb().executeSync('DELETE FROM import_history WHERE id = ?', [id]);
 };
 
 // Sync operations

@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 
 const DB_KEY_ALIAS = 'dream_vault_db_key';
+const DB_KEY_FLAG = 'dream_vault_db_key_exists'; // non-protected existence check
 
 /**
  * Generate a random 256-bit hex key.
@@ -12,7 +13,6 @@ function generateRandomKey(): string {
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     crypto.getRandomValues(bytes);
   } else {
-    // Fallback for environments without Web Crypto API
     for (let i = 0; i < 32; i++) {
       bytes[i] = Math.floor(Math.random() * 256);
     }
@@ -21,6 +21,20 @@ function generateRandomKey(): string {
   return Array.from(bytes)
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
+}
+
+/**
+ * Check if a DB key has been created (without triggering biometric prompt).
+ * Uses a separate non-protected flag since the actual key may require
+ * authentication to read.
+ */
+export async function hasDbKey(): Promise<boolean> {
+  try {
+    const flag = await SecureStore.getItemAsync(DB_KEY_FLAG);
+    return flag === '1';
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -49,6 +63,7 @@ export async function getDbKey(): Promise<string | null> {
 /**
  * Generate and store a new DB encryption key.
  * Tries biometric-protected storage; falls back to plain SecureStore.
+ * Also stores a non-protected flag for hasDbKey() checks.
  */
 export async function createDbKey(): Promise<string> {
   const key = generateRandomKey();
@@ -66,19 +81,10 @@ export async function createDbKey(): Promise<string> {
     console.log('[db-key] Stored without auth protection');
   }
 
-  return key;
-}
+  // Store non-protected flag so hasDbKey() works without triggering biometric
+  await SecureStore.setItemAsync(DB_KEY_FLAG, '1');
 
-/**
- * Check if a DB key exists (without requiring authentication).
- */
-export async function hasDbKey(): Promise<boolean> {
-  try {
-    const key = await SecureStore.getItemAsync(DB_KEY_ALIAS);
-    return key !== null;
-  } catch {
-    return false;
-  }
+  return key;
 }
 
 /**
@@ -86,4 +92,5 @@ export async function hasDbKey(): Promise<boolean> {
  */
 export async function deleteDbKey(): Promise<void> {
   await SecureStore.deleteItemAsync(DB_KEY_ALIAS);
+  await SecureStore.deleteItemAsync(DB_KEY_FLAG);
 }
