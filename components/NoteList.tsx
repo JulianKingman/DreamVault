@@ -1,5 +1,5 @@
-import React, { useState, useCallback, ReactElement } from 'react';
-import { FlatList, StyleSheet, Image, View } from 'react-native';
+import React, { useState, useCallback, ReactElement, useRef } from 'react';
+import { FlatList, StyleSheet, Image, View, TextInput } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Text, YStack, XStack, Input, Button } from 'tamagui';
 import { Trash2 } from '@tamagui/lucide-icons';
@@ -17,6 +17,9 @@ interface NoteListProps {
   favoritesOnly?: boolean;
   searchForm?: boolean;
   searchPosition?: 'top' | 'bottom';
+  autoFocusSearch?: boolean;
+  /** External search term — when provided, NoteList won't render its own search input */
+  externalSearch?: string;
   headerComponent?: ReactElement;
   onScroll?: any;
   animated?: boolean;
@@ -26,12 +29,16 @@ export function NoteList({
   favoritesOnly = false,
   searchForm = false,
   searchPosition = 'top',
+  autoFocusSearch = false,
+  externalSearch,
   headerComponent,
   onScroll,
   animated = false,
 }: NoteListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [internalSearch, setInternalSearch] = useState('');
+  const searchTerm = externalSearch ?? internalSearch;
   const dreams = useDreams({ search: searchTerm, favoritesOnly });
+  const searchRef = useRef<TextInput>(null);
 
   const handleDelete = useCallback((id: number) => {
     Alert.alert(
@@ -206,11 +213,15 @@ export function NoteList({
     );
   }, [renderRightActions]);
 
-  const searchInput = searchForm ? (
+  // Only render built-in search when not using externalSearch
+  const showBuiltInSearch = searchForm && externalSearch === undefined;
+
+  const searchInput = showBuiltInSearch ? (
     <Input
+      ref={searchRef as any}
       placeholder="Search dreams..."
-      value={searchTerm}
-      onChangeText={setSearchTerm}
+      value={internalSearch}
+      onChangeText={setInternalSearch}
       marginBottom={searchPosition === 'top' ? '$2' : undefined}
       marginTop={searchPosition === 'bottom' ? '$2' : undefined}
       marginHorizontal="$4"
@@ -218,17 +229,18 @@ export function NoteList({
       backgroundColor="$backgroundStrong"
       borderWidth={0}
       fontFamily="$body"
+      autoFocus={autoFocusSearch}
     />
   ) : null;
 
   const listHeader = (
     <>
       {headerComponent}
-      {searchForm && searchPosition === 'top' ? searchInput : null}
+      {showBuiltInSearch && searchPosition === 'top' ? searchInput : null}
     </>
   );
 
-  const listFooter = searchForm && searchPosition === 'bottom' ? searchInput : null;
+  const listFooter = showBuiltInSearch && searchPosition === 'bottom' ? searchInput : null;
 
   const ListComponent = animated ? AnimatedFlatList : FlatList;
 

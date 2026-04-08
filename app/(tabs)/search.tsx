@@ -8,7 +8,7 @@ export default function SearchScreen() {
     <View style={styles.container}>
       <AtmosphericBackground />
       <SafeAreaView style={styles.container}>
-        <NoteList searchForm />
+        <NoteList searchForm autoFocusSearch />
       </SafeAreaView>
     </View>
   );
