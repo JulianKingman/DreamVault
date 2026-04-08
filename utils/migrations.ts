@@ -52,6 +52,12 @@ const migrations: Migration[] = [
       db.execSync(`ALTER TABLE dreams ADD COLUMN isEncrypted INTEGER DEFAULT 0`);
     },
   },
+  {
+    version: 5,
+    up: (db) => {
+      db.execSync(`ALTER TABLE dreams ADD COLUMN imageUri TEXT`);
+    },
+  },
 ];
 
 function generateUUID(): string {

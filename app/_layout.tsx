@@ -4,9 +4,10 @@ import { Stack } from 'expo-router';
 import { TamaguiProvider, Theme, YStack } from 'tamagui';
 import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Plus } from '@tamagui/lucide-icons';
+import { Mic } from '@tamagui/lucide-icons';
 import { useRouter, usePathname } from 'expo-router';
 import { ThemeProvider } from '@react-navigation/core';
+import { LinearGradient } from 'expo-linear-gradient';
 import '../tamagui-web.css';
 import config from '../tamagui.config';
 import { initDatabase } from '../utils/database';
@@ -16,6 +17,34 @@ import {
 } from '@react-navigation/native';
 import type { Theme as NavTheme } from '@react-navigation/native';
 import { ThemeProvider as AppThemeProvider, useTheme } from '../contexts/ThemeContext';
+
+// Navigation theme for Twilight (dark)
+const TwilightNavTheme: NavTheme = {
+  dark: true,
+  colors: {
+    primary: '#ffb77d',
+    background: '#040e1f',
+    card: '#02132c',
+    text: '#dae6ff',
+    border: 'rgba(33,72,125,0.15)',
+    notification: '#ffb148',
+  },
+  fonts: DarkTheme.fonts,
+};
+
+// Navigation theme for Twilight Light
+const TwilightLightNavTheme: NavTheme = {
+  dark: false,
+  colors: {
+    primary: '#c47a30',
+    background: '#faf6f1',
+    card: '#f5f0e8',
+    text: '#1a1510',
+    border: 'rgba(140,130,115,0.2)',
+    notification: '#c47a30',
+  },
+  fonts: DefaultTheme.fonts,
+};
 
 const MidnightNavTheme: NavTheme = {
   dark: true,
@@ -29,6 +58,7 @@ const MidnightNavTheme: NavTheme = {
   },
   fonts: DarkTheme.fonts,
 };
+
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { SyncProvider } from '../contexts/SyncContext';
 import { LockScreen } from '../components/LockScreen';
@@ -46,15 +76,16 @@ function RootLayoutInner() {
     initDatabase();
   }, []);
 
+  const navTheme =
+    resolvedTheme === 'midnight'
+      ? MidnightNavTheme
+      : resolvedTheme === 'light'
+        ? TwilightLightNavTheme
+        : TwilightNavTheme;
+
   return (
     <TamaguiProvider config={config} defaultTheme={resolvedTheme}>
-      <ThemeProvider value={
-        resolvedTheme === 'midnight'
-          ? MidnightNavTheme
-          : resolvedTheme === 'dark'
-            ? DarkTheme
-            : DefaultTheme
-      }>
+      <ThemeProvider value={navTheme}>
         <Theme name={resolvedTheme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -74,16 +105,22 @@ function RootLayoutInner() {
               right={20}
               bottom={100}
             >
-              <YStack
-                backgroundColor="$blue9"
-                borderRadius={30}
-                padding={15}
-                elevation={5}
-                pressStyle={{ backgroundColor: '$blue10' }}
-                onPress={() => router.push('/new-dream')}
+              <LinearGradient
+                colors={['#ffb77d', '#6e3900']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  borderRadius: 30,
+                  padding: 15,
+                }}
               >
-                <Plus color="white" size={24} />
-              </YStack>
+                <YStack
+                  pressStyle={{ opacity: 0.8, scale: 0.95 }}
+                  onPress={() => router.push('/new-dream')}
+                >
+                  <Mic color="#643400" size={24} />
+                </YStack>
+              </LinearGradient>
             </YStack>
           )}
           {isAuthEnabled && !isAuthenticated && <LockScreen />}
@@ -95,8 +132,15 @@ function RootLayoutInner() {
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
-    InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
+    // Plus Jakarta Sans (body/UI font)
+    PlusJakartaSans_300Light: require('@expo-google-fonts/plus-jakarta-sans/300Light/PlusJakartaSans_300Light.ttf'),
+    PlusJakartaSans_400Regular: require('@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf'),
+    PlusJakartaSans_500Medium: require('@expo-google-fonts/plus-jakarta-sans/500Medium/PlusJakartaSans_500Medium.ttf'),
+    PlusJakartaSans_600SemiBold: require('@expo-google-fonts/plus-jakarta-sans/600SemiBold/PlusJakartaSans_600SemiBold.ttf'),
+    PlusJakartaSans_700Bold: require('@expo-google-fonts/plus-jakarta-sans/700Bold/PlusJakartaSans_700Bold.ttf'),
+    // Noto Serif (dream content display font)
+    NotoSerif_400Regular: require('@expo-google-fonts/noto-serif/400Regular/NotoSerif_400Regular.ttf'),
+    NotoSerif_700Bold: require('@expo-google-fonts/noto-serif/700Bold/NotoSerif_700Bold.ttf'),
   });
 
   if (!loaded) {
