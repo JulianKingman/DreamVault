@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 
-const DB_KEY_ALIAS = 'dream_vault_db_key';
-const DB_KEY_FLAG = 'dream_vault_db_key_exists'; // non-protected existence check
+const DB_KEY_ALIAS = 'dream_locket_db_key';
+const DB_KEY_FLAG = 'dream_locket_db_key_exists'; // non-protected existence check
 
 /**
  * Generate a random 256-bit hex key.
@@ -47,7 +47,7 @@ export async function getDbKey(): Promise<string | null> {
   try {
     const key = await SecureStore.getItemAsync(DB_KEY_ALIAS, {
       requireAuthentication: true,
-      authenticationPrompt: 'Unlock Dream Vault',
+      authenticationPrompt: 'Unlock Dream Locket',
     });
     return key;
   } catch {
@@ -72,7 +72,7 @@ export async function createDbKey(): Promise<string> {
   try {
     await SecureStore.setItemAsync(DB_KEY_ALIAS, key, {
       requireAuthentication: true,
-      authenticationPrompt: 'Set up Dream Vault encryption',
+      authenticationPrompt: 'Set up Dream Locket encryption',
     });
     console.log('[db-key] Stored with auth protection');
   } catch (e) {

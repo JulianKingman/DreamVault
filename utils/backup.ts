@@ -56,7 +56,7 @@ export async function exportDreams(): Promise<string> {
   };
 
   const dateStr = new Date().toISOString().split('T')[0];
-  const fileName = `dream-vault-backup-${dateStr}.json`;
+  const fileName = `dream-locket-backup-${dateStr}.json`;
   const file = new File(Paths.cache, fileName);
 
   if (file.exists) {
@@ -68,7 +68,7 @@ export async function exportDreams(): Promise<string> {
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(file.uri, {
       mimeType: 'application/json',
-      dialogTitle: 'Save Dream Vault Backup',
+      dialogTitle: 'Save Dream Locket Backup',
       UTI: 'public.json',
     });
   }

@@ -9,27 +9,27 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		A9E1C45342C033C921A0A8D4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F9277BF5672757FBDA5426B0 /* PrivacyInfo.xcprivacy */; };
+		6DD17D9A136B0D696B25385A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0B4C887B438D77BBA06D9C70 /* PrivacyInfo.xcprivacy */; };
+		7A2D2E67F39CADBB1F7C2405 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72EC19687EC4A57958875063 /* ExpoModulesProvider.swift */; };
+		9E44D2A238B82D241D169D4D /* libPods-dreamlocket.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6545B0A2105684CD6B141CB /* libPods-dreamlocket.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		CBCA22D0DC1B532BDCE004A9 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD47A835C52CDC8CD745C417 /* ExpoModulesProvider.swift */; };
-		E2EAC534621A3585D7456880 /* libPods-dreamvault.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76839F195FE811123F49CC07 /* libPods-dreamvault.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		13B07F961A680F5B00A75B9A /* dreamvault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = dreamvault.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = dreamvault/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = dreamvault/Info.plist; sourceTree = "<group>"; };
-		76839F195FE811123F49CC07 /* libPods-dreamvault.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-dreamvault.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = dreamvault/SplashScreen.storyboard; sourceTree = "<group>"; };
+		0B4C887B438D77BBA06D9C70 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = dreamlocket/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* dreamlocket.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = dreamlocket.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = dreamlocket/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = dreamlocket/Info.plist; sourceTree = "<group>"; };
+		72EC19687EC4A57958875063 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-dreamlocket/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = dreamlocket/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		CD566445CBAEF16503C9EDBC /* Pods-dreamvault.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-dreamvault.release.xcconfig"; path = "Target Support Files/Pods-dreamvault/Pods-dreamvault.release.xcconfig"; sourceTree = "<group>"; };
-		D710E22487588F186D5D7DC7 /* Pods-dreamvault.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-dreamvault.debug.xcconfig"; path = "Target Support Files/Pods-dreamvault/Pods-dreamvault.debug.xcconfig"; sourceTree = "<group>"; };
-		DD47A835C52CDC8CD745C417 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-dreamvault/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		C6545B0A2105684CD6B141CB /* libPods-dreamlocket.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-dreamlocket.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D38BEB1B5C1D1CDB6F854F93 /* Pods-dreamlocket.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-dreamlocket.debug.xcconfig"; path = "Target Support Files/Pods-dreamlocket/Pods-dreamlocket.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = dreamvault/AppDelegate.swift; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* dreamvault-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "dreamvault-Bridging-Header.h"; path = "dreamvault/dreamvault-Bridging-Header.h"; sourceTree = "<group>"; };
-		F9277BF5672757FBDA5426B0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = dreamvault/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = dreamlocket/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* dreamlocket-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "dreamlocket-Bridging-Header.h"; path = "dreamlocket/dreamlocket-Bridging-Header.h"; sourceTree = "<group>"; };
+		F772745CF1868B707CDFB27C /* Pods-dreamlocket.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-dreamlocket.release.xcconfig"; path = "Target Support Files/Pods-dreamlocket/Pods-dreamlocket.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,49 +37,57 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E2EAC534621A3585D7456880 /* libPods-dreamvault.a in Frameworks */,
+				9E44D2A238B82D241D169D4D /* libPods-dreamlocket.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* dreamvault */ = {
+		0A86CDA3E5136D9EF6541B0F /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				3CA171DAF1037D26C3753A05 /* dreamlocket */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		13B07FAE1A68108700A75B9A /* dreamlocket */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* dreamvault-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* dreamlocket-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				F9277BF5672757FBDA5426B0 /* PrivacyInfo.xcprivacy */,
+				0B4C887B438D77BBA06D9C70 /* PrivacyInfo.xcprivacy */,
 			);
-			name = dreamvault;
-			sourceTree = "<group>";
-		};
-		26AC236F1C4CE2738FACB24A /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				CAF0010989105E4B473DB2FD /* dreamvault */,
-			);
-			name = ExpoModulesProviders;
+			name = dreamlocket;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				76839F195FE811123F49CC07 /* libPods-dreamvault.a */,
+				C6545B0A2105684CD6B141CB /* libPods-dreamlocket.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		69093C8C26E8C6ABB10A88E1 /* Pods */ = {
+		3CA171DAF1037D26C3753A05 /* dreamlocket */ = {
 			isa = PBXGroup;
 			children = (
-				D710E22487588F186D5D7DC7 /* Pods-dreamvault.debug.xcconfig */,
-				CD566445CBAEF16503C9EDBC /* Pods-dreamvault.release.xcconfig */,
+				72EC19687EC4A57958875063 /* ExpoModulesProvider.swift */,
+			);
+			name = dreamlocket;
+			sourceTree = "<group>";
+		};
+		5DFC0906A5D4A050B58DAAC3 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				D38BEB1B5C1D1CDB6F854F93 /* Pods-dreamlocket.debug.xcconfig */,
+				F772745CF1868B707CDFB27C /* Pods-dreamlocket.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
@@ -95,12 +103,12 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* dreamvault */,
+				13B07FAE1A68108700A75B9A /* dreamlocket */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				69093C8C26E8C6ABB10A88E1 /* Pods */,
-				26AC236F1C4CE2738FACB24A /* ExpoModulesProviders */,
+				5DFC0906A5D4A050B58DAAC3 /* Pods */,
+				0A86CDA3E5136D9EF6541B0F /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -110,7 +118,7 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* dreamvault.app */,
+				13B07F961A680F5B00A75B9A /* dreamlocket.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -121,40 +129,32 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = dreamvault/Supporting;
-			sourceTree = "<group>";
-		};
-		CAF0010989105E4B473DB2FD /* dreamvault */ = {
-			isa = PBXGroup;
-			children = (
-				DD47A835C52CDC8CD745C417 /* ExpoModulesProvider.swift */,
-			);
-			name = dreamvault;
+			path = dreamlocket/Supporting;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* dreamvault */ = {
+		13B07F861A680F5B00A75B9A /* dreamlocket */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "dreamvault" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "dreamlocket" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				794343894657AAB7F7F5F05A /* [Expo] Configure project */,
+				939EF0897E2851B0F5DE5FE1 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				E81BF595F5DEE127BBD7C5C5 /* [CP] Embed Pods Frameworks */,
+				D59A6990D8517B8610D50DE4 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = dreamvault;
-			productName = dreamvault;
-			productReference = 13B07F961A680F5B00A75B9A /* dreamvault.app */;
+			name = dreamlocket;
+			productName = dreamlocket;
+			productReference = 13B07F961A680F5B00A75B9A /* dreamlocket.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -170,7 +170,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "dreamvault" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "dreamlocket" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -183,7 +183,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* dreamvault */,
+				13B07F861A680F5B00A75B9A /* dreamlocket */,
 			);
 		};
 /* End PBXProject section */
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				A9E1C45342C033C921A0A8D4 /* PrivacyInfo.xcprivacy in Resources */,
+				6DD17D9A136B0D696B25385A /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -235,36 +235,12 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-dreamvault-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-dreamlocket-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
-		};
-		794343894657AAB7F7F5F05A /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/dreamvault/dreamvault.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-dreamvault/expo-configure-project.sh",
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-dreamvault/ExpoModulesProvider.swift",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-dreamvault/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -272,7 +248,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-dreamvault/Pods-dreamvault-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-dreamlocket/Pods-dreamlocket-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
@@ -299,16 +275,40 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-dreamvault/Pods-dreamvault-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-dreamlocket/Pods-dreamlocket-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E81BF595F5DEE127BBD7C5C5 /* [CP] Embed Pods Frameworks */ = {
+		939EF0897E2851B0F5DE5FE1 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/dreamlocket/dreamlocket.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-dreamlocket/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-dreamlocket/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-dreamlocket/expo-configure-project.sh\"\n";
+		};
+		D59A6990D8517B8610D50DE4 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-dreamvault/Pods-dreamvault-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-dreamlocket/Pods-dreamlocket-frameworks.sh",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/OpenSSL-Universal/OpenSSL.framework/OpenSSL",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
@@ -323,7 +323,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-dreamvault/Pods-dreamvault-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-dreamlocket/Pods-dreamlocket-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -334,7 +334,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				CBCA22D0DC1B532BDCE004A9 /* ExpoModulesProvider.swift in Sources */,
+				7A2D2E67F39CADBB1F7C2405 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -343,11 +343,11 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D710E22487588F186D5D7DC7 /* Pods-dreamvault.debug.xcconfig */;
+			baseConfigurationReference = D38BEB1B5C1D1CDB6F854F93 /* Pods-dreamlocket.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = dreamvault/dreamvault.entitlements;
+				CODE_SIGN_ENTITLEMENTS = dreamlocket/dreamlocket.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DISABLE_DIAMOND_PROBLEM_DIAGNOSTIC = YES;
 				ENABLE_BITCODE = NO;
@@ -355,7 +355,7 @@
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = dreamvault/Info.plist;
+				INFOPLIST_FILE = dreamlocket/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -369,9 +369,9 @@
 					"-lz",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.buishi.dreamvault;
-				PRODUCT_NAME = dreamvault;
-				SWIFT_OBJC_BRIDGING_HEADER = "dreamvault/dreamvault-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = com.buishi.dreamlocket;
+				PRODUCT_NAME = dreamlocket;
+				SWIFT_OBJC_BRIDGING_HEADER = "dreamlocket/dreamlocket-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -381,14 +381,14 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = CD566445CBAEF16503C9EDBC /* Pods-dreamvault.release.xcconfig */;
+			baseConfigurationReference = F772745CF1868B707CDFB27C /* Pods-dreamlocket.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = dreamvault/dreamvault.entitlements;
+				CODE_SIGN_ENTITLEMENTS = dreamlocket/dreamlocket.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DISABLE_DIAMOND_PROBLEM_DIAGNOSTIC = YES;
-				INFOPLIST_FILE = dreamvault/Info.plist;
+				INFOPLIST_FILE = dreamlocket/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -402,9 +402,9 @@
 					"-lz",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.buishi.dreamvault;
-				PRODUCT_NAME = dreamvault;
-				SWIFT_OBJC_BRIDGING_HEADER = "dreamvault/dreamvault-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = com.buishi.dreamlocket;
+				PRODUCT_NAME = dreamlocket;
+				SWIFT_OBJC_BRIDGING_HEADER = "dreamlocket/dreamlocket-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -532,7 +532,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "dreamvault" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "dreamlocket" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -541,7 +541,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "dreamvault" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "dreamlocket" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

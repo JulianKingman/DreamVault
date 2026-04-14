@@ -1,4 +1,4 @@
-package com.buishi.dreamvault
+package com.buishi.dreamlocket
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

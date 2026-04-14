@@ -11,8 +11,8 @@
  */
 import * as SecureStore from 'expo-secure-store';
 
-const KYBER_SK_ALIAS = 'dream_vault_kyber_sk';
-const KYBER_PK_ALIAS = 'dream_vault_kyber_pk';
+const KYBER_SK_ALIAS = 'dream_locket_kyber_sk';
+const KYBER_PK_ALIAS = 'dream_locket_kyber_pk';
 
 let KyberModule: any = null;
 

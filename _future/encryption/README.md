@@ -12,7 +12,7 @@ into production code paths. They are preserved here for future use.
 
 ## When to revisit
 
-If Dream Vault needs:
+If Dream Locket needs:
 - Local database encryption → see `specs/sqlcipher-migration.md` (preferred approach)
 - End-to-end encrypted sync independent of Apple → integrate these files into `utils/sync.ts`
 

@@ -2,7 +2,7 @@
 
 ## Problem
 
-Dream Vault has a half-built custom encryption stack that provides a false sense of security:
+Dream Locket has a half-built custom encryption stack that provides a false sense of security:
 
 - **`crypto.ts`** (AES-256-GCM per-field encryption) — implemented but **never called** from any read/write path. The `encryptDream()`, `decryptDreamFields()`, and `encryptAllDreams()` functions in `database.ts` exist but are dead code. The settings UI has an "Encrypt existing dreams" button that nobody presses.
 - **`crypto-kyber.ts`** (ML-KEM 768 post-quantum key wrapping) — implemented but **never integrated** into the sync pipeline. `sync.ts` writes plaintext JSON to iCloud.
@@ -91,7 +91,7 @@ into production code paths. They are preserved here for future use.
 
 ## When to revisit
 
-If Dream Vault needs:
+If Dream Locket needs:
 - Local database encryption → see `specs/sqlcipher-migration.md` (preferred approach)
 - End-to-end encrypted sync independent of Apple → integrate these files into `utils/sync.ts`
 
@@ -149,7 +149,7 @@ In `utils/migrations.ts`, edit the v4 migration to remove the `ALTER TABLE dream
   />
   <XStack paddingHorizontal="$4" paddingBottom="$3">
     <Text fontSize="$2" color="$gray10">
-      Requires biometric authentication to open Dream Vault.
+      Requires biometric authentication to open Dream Locket.
       iCloud data is encrypted by Apple — enable Advanced Data Protection
       in your device's iCloud settings for end-to-end encryption.
     </Text>
@@ -252,7 +252,7 @@ export async function exportDreams(): Promise<string> {
   };
 
   const dateStr = new Date().toISOString().split('T')[0];
-  const fileName = `dream-vault-backup-${dateStr}.json`;
+  const fileName = `dream-locket-backup-${dateStr}.json`;
   const fileUri = `${FileSystem.documentDirectory}${fileName}`;
 
   await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(backup, null, 2));
@@ -261,7 +261,7 @@ export async function exportDreams(): Promise<string> {
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(fileUri, {
       mimeType: 'application/json',
-      dialogTitle: 'Save Dream Vault Backup',
+      dialogTitle: 'Save Dream Locket Backup',
       UTI: 'public.json',
     });
   }

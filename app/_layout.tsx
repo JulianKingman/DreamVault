@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { TamaguiProvider, Theme, YStack } from 'tamagui';
 import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Mic } from '@tamagui/lucide-icons';
+import { Plus } from '@tamagui/lucide-icons';
 import { useRouter, usePathname } from 'expo-router';
 import { ThemeProvider } from '@react-navigation/core';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -114,7 +114,7 @@ function RootLayoutInner() {
             <YStack
               position="absolute"
               right={20}
-              bottom={100}
+              bottom={170}
             >
               <LinearGradient
                 colors={getAccentGradient(resolvedTheme)}
@@ -129,7 +129,7 @@ function RootLayoutInner() {
                   pressStyle={{ opacity: 0.8, scale: 0.95 }}
                   onPress={() => router.push('/new-dream')}
                 >
-                  <Mic color={getAccentForeground(resolvedTheme)} size={24} />
+                  <Plus color={getAccentForeground(resolvedTheme)} size={24} />
                 </YStack>
               </LinearGradient>
             </YStack>

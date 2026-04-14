@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import AesGcmCrypto from 'react-native-aes-gcm-crypto';
 
-const MASTER_KEY_ALIAS = 'dream_vault_master_key';
+const MASTER_KEY_ALIAS = 'dream_locket_master_key';
 
 async function getOrCreateMasterKey(): Promise<string> {
   let key = await SecureStore.getItemAsync(MASTER_KEY_ALIAS, {

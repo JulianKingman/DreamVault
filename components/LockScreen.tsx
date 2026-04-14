@@ -25,7 +25,7 @@ export function LockScreen() {
     >
       <Lock size={64} color="$gray10" />
       <Text fontSize="$7" fontWeight="bold">
-        Dream Vault
+        Dream Locket
       </Text>
       <Text fontSize="$4" color="$gray10">
         {isFirstLaunch

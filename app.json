@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "dream-vault",
-    "slug": "dream-vault",
+    "name": "dream-locket",
+    "slug": "dream-locket",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,19 +14,19 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.buishi.dreamvault",
+      "bundleIdentifier": "com.buishi.dreamlocket",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Dream Vault uses Face ID to protect your dream journal."
+        "NSFaceIDUsageDescription": "Dream Locket uses Face ID to protect your dream journal."
       },
       "entitlements": {
         "com.apple.developer.icloud-container-identifiers": [
-          "iCloud.com.buishi.dreamvault"
+          "iCloud.com.buishi.dreamlocket"
         ],
         "com.apple.developer.icloud-services": [
           "CloudDocuments"
         ],
         "com.apple.developer.ubiquity-container-identifiers": [
-          "iCloud.com.buishi.dreamvault"
+          "iCloud.com.buishi.dreamlocket"
         ]
       }
     },
@@ -35,7 +35,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.buishi.dreamvault"
+      "package": "com.buishi.dreamlocket",
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -47,14 +51,13 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Dream Vault uses Face ID to protect your dream journal."
+          "faceIDPermission": "Dream Locket uses Face ID to protect your dream journal."
         }
       ],
       [
         "expo-build-properties",
         {
           "ios": {
-            "newArchEnabled": true,
             "newArchEnabled": true
           },
           "android": {
@@ -70,8 +73,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "c0b44b5c-c8cf-4cfe-b933-59ff0cb4128f"
-      }
+        "projectId": "bbaaf527-691f-4c33-b2e6-2b55abba9fc0"
+      },
+      "router": {}
     },
     "install": {
       "exclude": [
@@ -80,6 +84,7 @@
         "react-native-gesture-handler@~2.16.1",
         "react-native-screens@~3.31.1"
       ]
-    }
+    },
+    "owner": "buishi"
   }
 }

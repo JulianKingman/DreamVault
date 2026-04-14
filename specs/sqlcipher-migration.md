@@ -73,13 +73,13 @@ Single responsibility: get or create the DB encryption key, biometric-gated.
 ```typescript
 import * as SecureStore from 'expo-secure-store';
 
-const DB_KEY_ALIAS = 'dream_vault_db_key';
+const DB_KEY_ALIAS = 'dream_locket_db_key';
 
 export async function getDbKey(): Promise<string | null> {
   try {
     return await SecureStore.getItemAsync(DB_KEY_ALIAS, {
       requireAuthentication: true,
-      authenticationPrompt: 'Unlock Dream Vault',
+      authenticationPrompt: 'Unlock Dream Locket',
     });
   } catch {
     return null; // user cancelled or biometric failed
@@ -95,7 +95,7 @@ export async function createDbKey(): Promise<string> {
 
   await SecureStore.setItemAsync(DB_KEY_ALIAS, key, {
     requireAuthentication: true,
-    authenticationPrompt: 'Set up Dream Vault encryption',
+    authenticationPrompt: 'Set up Dream Locket encryption',
   });
 
   return key;
@@ -275,7 +275,7 @@ export function LockScreen() {
     <YStack style={styles.container} alignItems="center" justifyContent="center" space="$6">
       <Lock size={64} color="$gray10" />
       <Text fontSize="$7" fontWeight="bold">
-        Dream Vault
+        Dream Locket
       </Text>
       <Text fontSize="$4" color="$gray10">
         {isFirstLaunch

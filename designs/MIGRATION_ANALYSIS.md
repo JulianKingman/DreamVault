@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document compares the new Twilight design mockups (AI-generated HTML/CSS) against the current Dream Vault implementation (Expo/React Native/Tamagui). It identifies:
+This document compares the new Twilight design mockups (AI-generated HTML/CSS) against the current Dream Locket implementation (Expo/React Native/Tamagui). It identifies:
 
 1. **Visual/UX changes** that align with our existing architecture and can be migrated
 2. **Design decisions in the mockups that conflict with our existing decisions** (where we keep ours)
