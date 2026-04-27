@@ -37,6 +37,61 @@ const migrations: Migration[] = [
       db.executeSync(`ALTER TABLE dreams ADD COLUMN imageUri TEXT`);
     },
   },
+  {
+    version: 5,
+    up: (db) => {
+      db.executeSync(`ALTER TABLE tags ADD COLUMN last_used_at TEXT`);
+    },
+  },
+  {
+    version: 6,
+    up: (db) => {
+      // Seed common dream vibes
+      const seeds = [
+        'lucid', 'nightmare', 'recurring', 'flying', 'falling',
+        'chasing', 'water', 'animals', 'people', 'places',
+        'surreal', 'vivid', 'peaceful', 'anxious', 'prophetic',
+        'childhood', 'adventure', 'transformation', 'spiritual', 'symbolic',
+      ];
+      for (const name of seeds) {
+        db.executeSync('INSERT OR IGNORE INTO tags (name) VALUES (?)', [name]);
+      }
+    },
+  },
+  {
+    version: 7,
+    up: (db) => {
+      // Create intentions table
+      db.executeSync(`
+        CREATE TABLE IF NOT EXISTS intentions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          date TEXT NOT NULL UNIQUE,
+          content TEXT NOT NULL,
+          dateCreated TEXT NOT NULL,
+          dateModified TEXT NOT NULL
+        )
+      `);
+      // Migrate existing intentions from dreams into the new table.
+      // For each date, take the first non-empty intention.
+      db.executeSync(`
+        INSERT OR IGNORE INTO intentions (date, content, dateCreated, dateModified)
+        SELECT
+          substr(dateCreated, 1, 10) as date,
+          intention,
+          MIN(dateCreated) as dateCreated,
+          MIN(dateCreated) as dateModified
+        FROM dreams
+        WHERE intention IS NOT NULL AND intention != '' AND isDeleted = 0
+        GROUP BY substr(dateCreated, 1, 10)
+      `);
+      // Drop intention column from dreams (may not exist on fresh installs)
+      try {
+        db.executeSync(`ALTER TABLE dreams DROP COLUMN intention`);
+      } catch {
+        // Column doesn't exist — fresh install, nothing to drop
+      }
+    },
+  },
 ];
 
 export function runMigrations(db: DB): void {

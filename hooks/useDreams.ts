@@ -1,50 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { getDb, getDreams, rowToDream, attachTags } from '../utils/database';
+import { getDreams } from '../utils/database';
+import { subscribe, DB_CHANGE } from '../utils/events';
 import type { Dream } from '../types';
 
 export function useDreams({ search = '', favoritesOnly = false }) {
   const [dreams, setDreams] = useState<Dream[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0);
+  // Monotonic counter that ticks on ANY database write.
+  // Components can depend on this to re-derive data (e.g. intentions)
+  // even when the dreams array itself hasn't changed.
+  const [dataVersion, setDataVersion] = useState(0);
 
-  const refresh = useCallback(() => {
-    setRefreshKey((k) => k + 1);
-  }, []);
+  const reload = useCallback(() => {
+    setDreams(getDreams(search, favoritesOnly));
+    setDataVersion((v) => v + 1);
+  }, [search, favoritesOnly]);
 
-  // Re-fetch when screen comes into focus (e.g. after import dismisses)
+  // Re-fetch when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      setDreams(getDreams(search, favoritesOnly));
-    }, [search, favoritesOnly])
+      reload();
+    }, [reload])
   );
 
+  // Re-fetch on any database write
   useEffect(() => {
-    const db = getDb();
+    reload(); // initial load
+    return subscribe(DB_CHANGE, reload);
+  }, [reload]);
 
-    let query = 'SELECT * FROM dreams WHERE content LIKE ? AND (isDeleted = 0 OR isDeleted IS NULL)';
-    const params: (string | number)[] = [`%${search}%`];
-    if (favoritesOnly) query += ' AND isFavorite = 1';
-    query += ' ORDER BY dateModified DESC';
-
-    // reactiveExecute re-runs the query whenever the specified tables change
-    // and fires the callback with the new results.
-    const unsubscribe = db.reactiveExecute({
-      query,
-      arguments: params,
-      fireOn: [{ table: 'dreams' }],
-      callback: (result) => {
-        const rows = result.rows ?? [];
-        setDreams(rows.map((row: any) => attachTags(rowToDream(row))));
-      },
-    });
-
-    // Load initial data — reactiveExecute may not fire on subscribe
-    setDreams(getDreams(search, favoritesOnly));
-
-    return () => {
-      unsubscribe();
-    };
-  }, [search, favoritesOnly, refreshKey]);
-
-  return { dreams, refresh };
+  return { dreams, dataVersion, refresh: reload };
 }

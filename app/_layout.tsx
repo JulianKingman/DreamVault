@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { TamaguiProvider, Theme, YStack } from 'tamagui';
 import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Plus } from '@tamagui/lucide-icons';
 import { useRouter, usePathname } from 'expo-router';
 import { ThemeProvider } from '@react-navigation/core';
@@ -159,13 +160,15 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppThemeProvider>
-        <AuthProvider>
-          <SyncProvider>
-            <RootLayoutInner />
-          </SyncProvider>
-        </AuthProvider>
-      </AppThemeProvider>
+      <BottomSheetModalProvider>
+        <AppThemeProvider>
+          <AuthProvider>
+            <SyncProvider>
+              <RootLayoutInner />
+            </SyncProvider>
+          </AuthProvider>
+        </AppThemeProvider>
+      </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 }

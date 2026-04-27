@@ -40,7 +40,7 @@ export async function exportDreams(): Promise<string> {
     uuid: d.uuid ?? generateUUID(),
     content: d.content,
     title: d.title,
-    intention: d.intention,
+    intention: null, // Intentions are now stored separately per-date
     notes: d.notes,
     isFavorite: d.isFavorite,
     dateCreated: d.dateCreated.toISOString(),

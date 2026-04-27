@@ -5,13 +5,20 @@ export interface Dream {
   content: string;
   isFavorite: boolean;
   title: string | null;
-  intention: string | null;
   notes: string | null;
   imageUri?: string | null;
   tags?: Tag[];
   uuid?: string;
   lastSyncedAt?: Date | null;
   isDeleted?: boolean;
+}
+
+export interface Intention {
+  id: number;
+  date: string; // YYYY-MM-DD
+  content: string;
+  dateCreated: Date;
+  dateModified: Date;
 }
 
 export interface Tag {

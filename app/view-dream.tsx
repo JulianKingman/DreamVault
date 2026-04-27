@@ -2,20 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView, StyleSheet, Alert, ScrollView, View, Share, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { YStack, Text, Input, Button, XStack } from 'tamagui';
-import { getDreamById, updateDream, toggleFavorite, deleteDream, setDreamTags, getAllTags } from '../utils/database';
-import type { Dream, Tag } from '../types';
+import { getDreamById, updateDream, toggleFavorite, deleteDream, setDreamTags, getAllTags, getIntentionForDate } from '../utils/database';
+import type { Dream, Intention, Tag } from '../types';
 import { Bookmark, Trash2, X, Edit3, Share2, ChevronLeft, Compass } from '@tamagui/lucide-icons';
 import { AIInsights } from '../components/AIInsights';
 import { AtmosphericBackground } from '../components/AtmosphericBackground';
 import { GlassCard } from '../components/GlassCard';
 
+function formatDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export default function ViewDreamScreen() {
   const { dreamId } = useLocalSearchParams<{ dreamId: string }>();
   const router = useRouter();
   const [dream, setDream] = useState<Dream | null>(null);
+  const [intention, setIntentionState] = useState<Intention | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
-  const [editedIntention, setEditedIntention] = useState('');
   const [editedNotes, setEditedNotes] = useState('');
   const [editedTags, setEditedTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
@@ -27,9 +34,11 @@ export default function ViewDreamScreen() {
       if (fetched) {
         setDream(fetched);
         setEditedContent(fetched.content);
-        setEditedIntention(fetched.intention ?? '');
         setEditedNotes(fetched.notes ?? '');
         setEditedTags(fetched.tags?.map(t => t.name) ?? []);
+        // Fetch intention for this dream's date
+        const dateKey = formatDateKey(fetched.dateCreated);
+        setIntentionState(getIntentionForDate(dateKey));
       }
     }
     setAllTags(getAllTags());
@@ -38,7 +47,6 @@ export default function ViewDreamScreen() {
   const startEditing = () => {
     if (!dream) return;
     setEditedContent(dream.content);
-    setEditedIntention(dream.intention ?? '');
     setEditedNotes(dream.notes ?? '');
     setEditedTags(dream.tags?.map(t => t.name) ?? []);
     setIsEditing(true);
@@ -50,7 +58,6 @@ export default function ViewDreamScreen() {
         ...dream,
         content: editedContent.trim(),
         title: dream.title,
-        intention: editedIntention.trim() || null,
         notes: editedNotes.trim() || null,
       };
       updateDream(updatedDream);
@@ -103,7 +110,7 @@ export default function ViewDreamScreen() {
               day: 'numeric',
             });
             let message = `${dateStr}\n\n${dream.content}`;
-            if (dream.intention) message += `\n\nIntention: ${dream.intention}`;
+            if (intention) message += `\n\nIntention: ${intention.content}`;
             if (dream.notes) message += `\n\nNotes: ${dream.notes}`;
             if (dream.tags && dream.tags.length > 0) {
               message += `\n\n${dream.tags.map(t => `#${t.name}`).join(' ')}`;
@@ -199,24 +206,8 @@ export default function ViewDreamScreen() {
               />
 
               <YStack gap="$2">
-                <XStack alignItems="center" gap="$2">
-                  <Compass size={14} color="$gray10" />
-                  <Text fontSize="$2" color="$gray10" fontFamily="$body" letterSpacing={1.5} textTransform="uppercase">
-                    Intention
-                  </Text>
-                </XStack>
-                <TextInput
-                  style={styles.editField}
-                  value={editedIntention}
-                  onChangeText={setEditedIntention}
-                  placeholder="What was your intention before sleep?"
-                  placeholderTextColor="#4e5c71"
-                />
-              </YStack>
-
-              <YStack gap="$2">
                 <Text fontSize="$2" color="$gray10" fontFamily="$body" letterSpacing={1.5} textTransform="uppercase">
-                  Notes
+                  Notes and Interpretation
                 </Text>
                 <TextInput
                   style={[styles.editField, { minHeight: 80 }]}
@@ -320,6 +311,16 @@ export default function ViewDreamScreen() {
                 </Text>
               </XStack>
 
+              {/* Intention (from intentions table) */}
+              {intention && (
+                <XStack alignItems="flex-start" gap="$2">
+                  <Compass size={14} color="$gray8" style={{ marginTop: 3 }} />
+                  <Text fontFamily="$body" fontSize="$3" color="$gray8" fontStyle="italic">
+                    {intention.content}
+                  </Text>
+                </XStack>
+              )}
+
               {/* Dream content */}
               <Text
                 fontFamily="$heading"
@@ -330,34 +331,7 @@ export default function ViewDreamScreen() {
                 {dream.content}
               </Text>
 
-              {/* Intention */}
-              {dream.intention && (
-                <YStack
-                  backgroundColor="$backgroundStrong"
-                  borderRadius={20}
-                  padding="$4"
-                  gap="$2"
-                >
-                  <XStack alignItems="center" gap="$2">
-                    <Compass size={14} color="$gray10" />
-                    <Text
-                      fontSize="$2"
-                      color="$gray10"
-                      fontFamily="$body"
-                      fontWeight="600"
-                      letterSpacing={1.5}
-                      textTransform="uppercase"
-                    >
-                      Intention
-                    </Text>
-                  </XStack>
-                  <Text fontFamily="$body" fontSize="$4" lineHeight={22} color="$color">
-                    {dream.intention}
-                  </Text>
-                </YStack>
-              )}
-
-              {/* Notes */}
+              {/* Notes and Interpretation */}
               {dream.notes && (
                 <YStack
                   backgroundColor="$backgroundStrong"
@@ -373,7 +347,7 @@ export default function ViewDreamScreen() {
                     letterSpacing={1.5}
                     textTransform="uppercase"
                   >
-                    Notes
+                    Notes and Interpretation
                   </Text>
                   <Text fontFamily="$body" fontSize="$4" lineHeight={22} color="$color">
                     {dream.notes}

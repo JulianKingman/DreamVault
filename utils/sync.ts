@@ -17,7 +17,7 @@ function dreamToPayload(dream: Dream): SyncDreamPayload {
     uuid: dream.uuid!,
     content: dream.content,
     title: dream.title,
-    intention: dream.intention,
+    intention: null, // Intentions are now stored separately per-date
     notes: dream.notes,
     isFavorite: dream.isFavorite,
     dateCreated: dream.dateCreated.toISOString(),
