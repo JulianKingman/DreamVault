@@ -71,6 +71,16 @@ const migrations: Migration[] = [
           dateModified TEXT NOT NULL
         )
       `);
+      // The `intention` column only exists on databases that were created
+      // before it was removed from createSchema(). On fresh installs the column
+      // never existed, so we'd hit "no such column: intention" if we ran the
+      // copy-then-drop blindly. Check first.
+      const columns = db.executeSync(`PRAGMA table_info(dreams)`);
+      const hasIntention = (columns.rows ?? []).some(
+        (r: any) => r.name === 'intention',
+      );
+      if (!hasIntention) return;
+
       // Migrate existing intentions from dreams into the new table.
       // For each date, take the first non-empty intention.
       db.executeSync(`
@@ -84,12 +94,7 @@ const migrations: Migration[] = [
         WHERE intention IS NOT NULL AND intention != '' AND isDeleted = 0
         GROUP BY substr(dateCreated, 1, 10)
       `);
-      // Drop intention column from dreams (may not exist on fresh installs)
-      try {
-        db.executeSync(`ALTER TABLE dreams DROP COLUMN intention`);
-      } catch {
-        // Column doesn't exist — fresh install, nothing to drop
-      }
+      db.executeSync(`ALTER TABLE dreams DROP COLUMN intention`);
     },
   },
 ];

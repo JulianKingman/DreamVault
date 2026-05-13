@@ -1,13 +1,25 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ScrollView, StyleSheet, TextInput, View, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View, KeyboardAvoidingView, Platform, Pressable, AppState, AppStateStatus } from 'react-native';
 import { Button, YStack, XStack, Text, Spinner } from 'tamagui';
-import { X, Sparkles } from '@tamagui/lucide-icons';
+import { X, Sparkles, Check } from '@tamagui/lucide-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { addDream, setDreamTags, getRecentTags, searchTags, getOrCreateTag, getIntentionForDate, setIntention } from '../utils/database';
+import {
+  addDream,
+  updateDream,
+  deleteDream,
+  setDreamTags,
+  getRecentTags,
+  searchTags,
+  getOrCreateTag,
+  getIntentionForDate,
+  setIntention,
+  toggleFavorite,
+} from '../utils/database';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import type { Tag as TagType } from '../types';
 import { useAI } from '../hooks/useAI';
 import { GlassCard } from './GlassCard';
+import { useDebouncedEffect } from '../hooks/useDebouncedEffect';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface NewDreamFormProps {
@@ -39,6 +51,17 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
   const router = useRouter();
   const { available: aiAvailable, suggestTags: aiSuggestTags } = useAI();
 
+  // Auto-save state
+  const [dreamId, setDreamId] = useState<number | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
+  // Track the last persisted values so we skip no-op writes (avoids spurious
+  // dateModified bumps which would confuse the sync layer).
+  const lastSavedIntentionRef = useRef<string>('');
+  const lastSavedContentRef = useRef<string>('');
+  const lastSavedNotesRef = useRef<string>('');
+  const lastSavedDateRef = useRef<number>(0); // ms epoch
+  const lastSavedTagsRef = useRef<string[]>([]);
+
   // Load intention for the selected date
   useEffect(() => {
     if (!params.prefillIntention) {
@@ -46,7 +69,10 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
       const existing = getIntentionForDate(dateKey);
       if (existing) {
         setIntentionText(existing.content);
+        lastSavedIntentionRef.current = existing.content;
       }
+    } else {
+      lastSavedIntentionRef.current = params.prefillIntention;
     }
   }, []);
 
@@ -56,7 +82,9 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
     setDreamDate(date);
     const dateKey = formatDateKey(date);
     const existing = getIntentionForDate(dateKey);
-    setIntentionText(existing?.content ?? '');
+    const next = existing?.content ?? '';
+    setIntentionText(next);
+    lastSavedIntentionRef.current = next;
   }, []);
 
   useEffect(() => {
@@ -85,54 +113,134 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
     setSelectedTags(prev => prev.filter(t => t !== name));
   }, []);
 
-  const saveDream = useCallback(() => {
-    if (!content.trim()) return null;
-    const dateKey = formatDateKey(dreamDate);
+  // --- Auto-save: dream + intention ---
+  //
+  // Strategy: on debounced changes to any persisted field, reconcile the DB with
+  // the current form state. Creates the dream the first time content is non-empty,
+  // updates it thereafter, and deletes if content goes back to empty.
+  //
+  // Tags are handled separately (immediately, not debounced) because add/remove
+  // are discrete actions and we want the side panel of recent tags to feel snappy.
+  const flushSave = useDebouncedEffect(
+    () => {
+      const trimmedContent = content.trim();
+      const trimmedNotes = notes.trim();
+      const trimmedIntention = intention.trim();
+      const dateKey = formatDateKey(dreamDate);
 
-    // Save intention for this date
-    if (intention.trim()) {
-      setIntention(dateKey, intention.trim());
-    }
+      // Persist intention independently of the dream (one per calendar date).
+      if (trimmedIntention && trimmedIntention !== lastSavedIntentionRef.current) {
+        setIntention(dateKey, trimmedIntention);
+        lastSavedIntentionRef.current = trimmedIntention;
+      }
 
-    // Save dream
-    const dream = addDream(
-      content.trim(),
-      undefined,
-      notes.trim() || undefined,
-      dreamDate
-    );
-    if (selectedTags.length > 0) {
-      setDreamTags(dream.id, selectedTags);
-    }
-    if (isFavorite) {
-      const { toggleFavorite } = require('../utils/database');
-      toggleFavorite(dream.id);
-    }
-    return dream;
-  }, [content, dreamDate, intention, notes, selectedTags, isFavorite]);
+      if (!trimmedContent) {
+        // No content: roll back any auto-created dream so we don't leave empty rows.
+        if (dreamId !== null) {
+          deleteDream(dreamId);
+          setDreamId(null);
+          setSaveStatus('idle');
+          lastSavedContentRef.current = '';
+          lastSavedNotesRef.current = '';
+          lastSavedTagsRef.current = [];
+        }
+        return;
+      }
 
-  const handleComplete = () => {
-    const dream = saveDream();
-    if (dream) {
-      router.back();
-    }
-  };
+      if (dreamId === null) {
+        const created = addDream(
+          trimmedContent,
+          undefined,
+          trimmedNotes || undefined,
+          dreamDate,
+        );
+        setDreamId(created.id);
+        if (selectedTags.length > 0) {
+          setDreamTags(created.id, selectedTags);
+        }
+        if (isFavorite) {
+          toggleFavorite(created.id);
+        }
+        lastSavedContentRef.current = trimmedContent;
+        lastSavedNotesRef.current = trimmedNotes;
+        lastSavedDateRef.current = dreamDate.getTime();
+        lastSavedTagsRef.current = [...selectedTags];
+        setSaveStatus('saved');
+        return;
+      }
 
-  const handleSaveAndAdd = () => {
-    const dream = saveDream();
-    if (dream) {
-      // Push a fresh form with the same date and intention
-      router.push({
-        pathname: '/new-dream',
-        params: {
-          prefillDate: dreamDate.toISOString(),
-          prefillIntention: intention,
-        },
+      // Update branch — skip if nothing actually changed since the last write.
+      const dateUnchanged = dreamDate.getTime() === lastSavedDateRef.current;
+      const contentUnchanged = trimmedContent === lastSavedContentRef.current;
+      const notesUnchanged = trimmedNotes === lastSavedNotesRef.current;
+      if (dateUnchanged && contentUnchanged && notesUnchanged) {
+        return;
+      }
+      updateDream({
+        id: dreamId,
+        content: trimmedContent,
+        notes: trimmedNotes || null,
+        title: null,
+        isFavorite,
+        dateCreated: dreamDate,
+        dateModified: new Date(),
       });
-    }
+      lastSavedContentRef.current = trimmedContent;
+      lastSavedNotesRef.current = trimmedNotes;
+      lastSavedDateRef.current = dreamDate.getTime();
+      setSaveStatus('saved');
+    },
+    [content, notes, intention, dreamDate, dreamId, selectedTags, isFavorite],
+    300,
+  );
+
+  // Tags fire immediately once we have a dream row (no debounce — discrete action).
+  // Skips the redundant write that would otherwise happen right after a create,
+  // because the debounced save's create branch already persisted the tags.
+  useEffect(() => {
+    if (dreamId === null) return;
+    const sortedCurrent = [...lastSavedTagsRef.current].sort().join('\0');
+    const sortedNext = [...selectedTags].sort().join('\0');
+    if (sortedCurrent === sortedNext) return;
+    setDreamTags(dreamId, selectedTags);
+    lastSavedTagsRef.current = [...selectedTags];
+  }, [selectedTags, dreamId]);
+
+  // Flush pending save on unmount (e.g. user swipes the modal away).
+  useEffect(() => {
+    return () => {
+      flushSave();
+    };
+  }, [flushSave]);
+
+  // Flush pending save when the app backgrounds.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'inactive' || state === 'background') {
+        flushSave();
+      }
+    });
+    return () => sub.remove();
+  }, [flushSave]);
+
+  const handleDone = () => {
+    flushSave();
+    router.back();
   };
 
-  const canSubmit = content.trim().length > 0;
+  const handleAddAnother = () => {
+    flushSave();
+    // Replace the current form so the user doesn't end up with a stack of saved forms.
+    router.replace({
+      pathname: '/new-dream',
+      params: {
+        prefillDate: dreamDate.toISOString(),
+        prefillIntention: intention,
+      },
+    });
+  };
+
+  const hasContent = content.trim().length > 0;
 
   const suggestedTags = recentTags.filter(t => !selectedTags.includes(t.name));
   const filteredResults = tagResults.filter(t => !selectedTags.includes(t.name));
@@ -157,17 +265,26 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
       >
         {/* Date + Time picker */}
         <YStack paddingHorizontal={24}>
-          <Text
-            fontSize="$2"
-            color="$gray10"
-            fontFamily="$body"
-            fontWeight="600"
-            letterSpacing={1.5}
-            textTransform="uppercase"
-            marginBottom="$1"
-          >
-            Date & Time
-          </Text>
+          <XStack alignItems="center" justifyContent="space-between" marginBottom="$1">
+            <Text
+              fontSize="$2"
+              color="$gray10"
+              fontFamily="$body"
+              fontWeight="600"
+              letterSpacing={1.5}
+              textTransform="uppercase"
+            >
+              Date & Time
+            </Text>
+            {saveStatus === 'saved' && (
+              <XStack alignItems="center" gap="$1.5">
+                <Check size={12} color="$gray10" />
+                <Text fontSize={11} color="$gray10" fontFamily="$body" letterSpacing={1} textTransform="uppercase">
+                  Saved
+                </Text>
+              </XStack>
+            )}
+          </XStack>
           <DateTimePicker
             value={dreamDate}
             mode="datetime"
@@ -408,15 +525,14 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
         {/* Action buttons */}
         <YStack paddingHorizontal={24} marginTop="$6" marginBottom="$4" gap="$3">
           <LinearGradient
-            colors={canSubmit ? ['#ffb77d', '#6e3900'] : ['#2e3c4f', '#1a2a3f']}
+            colors={hasContent ? ['#ffb77d', '#6e3900'] : ['#2e3c4f', '#1a2a3f']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.completeButton}
           >
             <Button
               unstyled
-              onPress={handleComplete}
-              disabled={!canSubmit}
+              onPress={handleDone}
               pressStyle={{ opacity: 0.8, scale: 0.95 }}
               paddingHorizontal="$5"
               paddingVertical="$3"
@@ -427,17 +543,17 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
                 fontFamily="$body"
                 fontWeight="700"
                 fontSize="$4"
-                color={canSubmit ? '#643400' : '$gray8'}
+                color={hasContent ? '#643400' : '$gray8'}
               >
-                Complete
+                Done
               </Text>
             </Button>
           </LinearGradient>
 
-          {canSubmit && (
+          {hasContent && (
             <Button
               unstyled
-              onPress={handleSaveAndAdd}
+              onPress={handleAddAnother}
               pressStyle={{ opacity: 0.7 }}
               paddingVertical="$3"
               alignItems="center"
@@ -448,7 +564,7 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
                 fontSize="$3"
                 color="$gray10"
               >
-                Save and Add Another Dream
+                Add Another Dream
               </Text>
             </Button>
           )}

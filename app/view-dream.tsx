@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, Alert, ScrollView, View, Share, TextInput } from 'react-native';
+import { SafeAreaView, StyleSheet, Alert, ScrollView, View, Share, TextInput, AppState, AppStateStatus } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { YStack, Text, Input, Button, XStack } from 'tamagui';
 import { getDreamById, updateDream, toggleFavorite, deleteDream, setDreamTags, getAllTags, getIntentionForDate } from '../utils/database';
 import type { Dream, Intention, Tag } from '../types';
-import { Bookmark, Trash2, X, Edit3, Share2, ChevronLeft, Compass } from '@tamagui/lucide-icons';
+import { Bookmark, Trash2, X, Edit3, Share2, ChevronLeft, Compass, Check } from '@tamagui/lucide-icons';
 import { AIInsights } from '../components/AIInsights';
 import { AtmosphericBackground } from '../components/AtmosphericBackground';
 import { GlassCard } from '../components/GlassCard';
+import { useDebouncedEffect } from '../hooks/useDebouncedEffect';
 
 function formatDateKey(date: Date): string {
   const y = date.getFullYear();
@@ -52,19 +53,62 @@ export default function ViewDreamScreen() {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    if (dream && editedContent.trim()) {
-      const updatedDream = {
+  // --- Auto-save while editing ---
+  //
+  // Debounced: text fields persist 300ms after the last keystroke. The effect
+  // also runs once on entering edit mode (with initial values equal to the loaded
+  // dream's), so we compare against the dream's current state to skip no-op writes.
+  const flushEditSave = useDebouncedEffect(
+    () => {
+      if (!isEditing || !dream) return;
+      const trimmedContent = editedContent.trim();
+      if (!trimmedContent) return; // never save an empty dream
+      const trimmedNotes = editedNotes.trim();
+      const nextNotes = trimmedNotes || null;
+      if (trimmedContent === dream.content && nextNotes === (dream.notes ?? null)) {
+        return; // nothing changed
+      }
+      const updated: Dream = {
         ...dream,
-        content: editedContent.trim(),
-        title: dream.title,
-        notes: editedNotes.trim() || null,
+        content: trimmedContent,
+        notes: nextNotes,
       };
-      updateDream(updatedDream);
-      const tags = setDreamTags(dream.id, editedTags);
-      setDream({ ...updatedDream, tags });
-      setIsEditing(false);
-    }
+      updateDream(updated);
+      setDream(updated);
+    },
+    [editedContent, editedNotes, isEditing, dream],
+    300,
+  );
+
+  // Tags fire immediately (discrete add/remove, no keystroke noise to debounce).
+  useEffect(() => {
+    if (!isEditing || !dream) return;
+    const currentTagNames = (dream.tags ?? []).map(t => t.name).sort();
+    const nextTagNames = [...editedTags].sort();
+    if (currentTagNames.join('') === nextTagNames.join('')) return;
+    const tags = setDreamTags(dream.id, editedTags);
+    setDream({ ...dream, tags });
+  }, [editedTags, isEditing, dream]);
+
+  // Flush any pending save when leaving the screen or backgrounding the app.
+  useEffect(() => {
+    return () => {
+      flushEditSave();
+    };
+  }, [flushEditSave]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'inactive' || state === 'background') {
+        flushEditSave();
+      }
+    });
+    return () => sub.remove();
+  }, [flushEditSave]);
+
+  const exitEditing = () => {
+    flushEditSave();
+    setIsEditing(false);
   };
 
   const handleToggleFavorite = () => {
@@ -271,26 +315,23 @@ export default function ViewDreamScreen() {
                 )}
               </YStack>
 
-              <XStack gap="$3" marginTop="$2">
+              <XStack alignItems="center" justifyContent="space-between" marginTop="$2">
+                <XStack alignItems="center" gap="$1.5">
+                  <Check size={12} color="$gray10" />
+                  <Text fontSize={11} color="$gray10" fontFamily="$body" letterSpacing={1} textTransform="uppercase">
+                    Saved automatically
+                  </Text>
+                </XStack>
                 <Button
-                  flex={1}
-                  onPress={() => setIsEditing(false)}
-                  backgroundColor="$backgroundStrong"
-                  borderRadius={9999}
-                  fontFamily="$body"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  flex={1}
-                  onPress={handleSave}
+                  onPress={exitEditing}
                   backgroundColor="$accentBackground"
                   color="$accentColor"
                   borderRadius={9999}
                   fontFamily="$body"
                   fontWeight="600"
+                  paddingHorizontal="$5"
                 >
-                  Save
+                  Done
                 </Button>
               </XStack>
             </YStack>

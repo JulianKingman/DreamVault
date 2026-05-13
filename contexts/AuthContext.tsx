@@ -6,12 +6,22 @@ import { storage } from '../utils/storage';
 
 const AUTH_ENABLED_KEY = 'auth_enabled';
 
+export type AuthResult =
+  | { ok: true }
+  | { ok: false; reason: 'in-progress' | 'no-key' | 'init-failed'; error?: unknown };
+
 interface AuthContextValue {
   isAuthenticated: boolean;
   isAuthEnabled: boolean;
   isFirstLaunch: boolean;
+  /**
+   * True while the app is inactive or backgrounded. Consumers should render a
+   * privacy overlay over sensitive content so iOS's launch-image snapshot
+   * doesn't leak dream content.
+   */
+  isObscured: boolean;
   setAuthEnabled: (enabled: boolean) => void;
-  authenticate: () => Promise<boolean>;
+  authenticate: () => Promise<AuthResult>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -22,11 +32,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     storage.getBoolean(AUTH_ENABLED_KEY) ?? false
   );
   const [isFirstLaunch, setIsFirstLaunch] = useState(false);
+  const [isObscured, setIsObscured] = useState(false);
   const appState = useRef(AppState.currentState);
   const isAuthenticating = useRef(false);
+  // Tracks whether we've passed through `background` since last `active`.
+  // We can't rely on `appState.current === 'background'` when receiving the
+  // `active` event because iOS always routes background→inactive→active, so
+  // the prev state at that moment is 'inactive', not 'background'.
+  const wasBackgroundedRef = useRef(false);
 
-  const authenticate = useCallback(async (): Promise<boolean> => {
-    if (isAuthenticating.current) return false;
+  const authenticate = useCallback(async (): Promise<AuthResult> => {
+    if (isAuthenticating.current) {
+      console.log('[Auth] Already authenticating, ignoring');
+      return { ok: false, reason: 'in-progress' };
+    }
     isAuthenticating.current = true;
     try {
       console.log('[Auth] Starting authentication...');
@@ -36,30 +55,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!keyExists) {
         setIsFirstLaunch(true);
         console.log('[Auth] First launch, creating key...');
-        const key = await createDbKey();
-        console.log('[Auth] Key created, initializing DB...');
-        initDatabase(key);
-        setIsAuthenticated(true);
-        setIsFirstLaunch(false);
-        console.log('[Auth] Authenticated!');
-        return true;
+        try {
+          const key = await createDbKey();
+          console.log('[Auth] Key created, initializing DB...');
+          initDatabase(key);
+          setIsAuthenticated(true);
+          setIsFirstLaunch(false);
+          console.log('[Auth] Authenticated!');
+          return { ok: true };
+        } catch (e) {
+          console.error('[Auth] Key creation / init failed:', e);
+          return { ok: false, reason: 'init-failed', error: e };
+        }
       }
 
       console.log('[Auth] Retrieving key...');
       const key = await getDbKey();
       if (!key) {
-        console.log('[Auth] Key retrieval returned null');
-        return false;
+        console.warn('[Auth] Key retrieval returned null');
+        return { ok: false, reason: 'no-key' };
       }
 
-      console.log('[Auth] Key retrieved, initializing DB...');
-      initDatabase(key);
-      setIsAuthenticated(true);
-      console.log('[Auth] Authenticated!');
-      return true;
-    } catch (e) {
-      console.error('[Auth] Error:', e);
-      return false;
+      try {
+        console.log('[Auth] Key retrieved, initializing DB...');
+        initDatabase(key);
+        setIsAuthenticated(true);
+        console.log('[Auth] Authenticated!');
+        return { ok: true };
+      } catch (e) {
+        console.error('[Auth] DB init failed:', e);
+        return { ok: false, reason: 'init-failed', error: e };
+      }
     } finally {
       isAuthenticating.current = false;
     }
@@ -73,20 +99,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Re-lock when app returns from background
+  // Privacy overlay + re-lock when app returns from background.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      // Obscure on anything that isn't fully active. This covers notification
+      // banners, control center, Face ID prompts — all transient — as well as
+      // real backgrounding. The overlay disappears as soon as we're active.
+      if (nextState === 'inactive' || nextState === 'background') {
+        setIsObscured(true);
+      } else if (nextState === 'active') {
+        setIsObscured(false);
+      }
+
+      // Remember background visits so we can re-lock on return to active.
+      if (nextState === 'background') {
+        wasBackgroundedRef.current = true;
+      }
+
       if (
-        appState.current.match(/inactive|background/) &&
         nextState === 'active' &&
+        wasBackgroundedRef.current &&
         isAuthenticated &&
         !isAuthenticating.current
       ) {
-        if (appState.current === 'background') {
-          closeDatabase();
-          setIsAuthenticated(false);
-        }
+        wasBackgroundedRef.current = false;
+        closeDatabase();
+        setIsAuthenticated(false);
       }
+
       appState.current = nextState;
     });
 
@@ -95,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, isAuthEnabled, isFirstLaunch, setAuthEnabled, authenticate }}
+      value={{ isAuthenticated, isAuthEnabled, isFirstLaunch, isObscured, setAuthEnabled, authenticate }}
     >
       {children}
     </AuthContext.Provider>

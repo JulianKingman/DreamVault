@@ -62,11 +62,12 @@ const MidnightNavTheme: NavTheme = {
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { SyncProvider } from '../contexts/SyncContext';
 import { LockScreen } from '../components/LockScreen';
+import { PrivacyOverlay } from '../components/PrivacyOverlay';
 import { useAutoSync } from '../hooks/useSync';
 
 function RootLayoutInner() {
   const { resolvedTheme } = useTheme();
-  const { isAuthenticated, isAuthEnabled } = useAuth();
+  const { isAuthenticated, isAuthEnabled, isObscured } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -135,6 +136,7 @@ function RootLayoutInner() {
               </LinearGradient>
             </YStack>
           )}
+          {isObscured && <PrivacyOverlay />}
         </Theme>
       </ThemeProvider>
     </TamaguiProvider>

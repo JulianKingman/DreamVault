@@ -163,8 +163,8 @@ export const addDream = (content: string, title?: string, notes?: string, dateCr
 export const updateDream = (dream: Dream): void => {
   const now = new Date().toISOString();
   getDb().executeSync(
-    'UPDATE dreams SET content = ?, dateModified = ?, isFavorite = ?, title = ?, notes = ? WHERE id = ?',
-    [dream.content, now, dream.isFavorite ? 1 : 0, dream.title, dream.notes, dream.id]
+    'UPDATE dreams SET content = ?, dateCreated = ?, dateModified = ?, isFavorite = ?, title = ?, notes = ? WHERE id = ?',
+    [dream.content, dream.dateCreated.toISOString(), now, dream.isFavorite ? 1 : 0, dream.title, dream.notes, dream.id]
   );
   emit(DB_CHANGE);
 };
