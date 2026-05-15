@@ -21,6 +21,7 @@ import {
   Moon,
   Sun,
   Sunset,
+  Clock,
   Info,
   ExternalLink,
   Shield,
@@ -37,8 +38,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSync } from '../../contexts/SyncContext';
 import { AtmosphericBackground } from '../../components/AtmosphericBackground';
 
+const RESOLVED_THEME_LABEL: Record<string, string> = {
+  light: 'Light',
+  dark: 'Twilight',
+  midnight: 'Midnight',
+};
+
 export default function SettingsScreen() {
-  const { themeMode, setThemeMode } = useTheme();
+  const { themeMode, resolvedTheme, setThemeMode } = useTheme();
   const { isAuthEnabled, setAuthEnabled } = useAuth();
   const { syncStatus, lastSyncTime, cloudAvailable, syncNow, checkCloudAvailability } = useSync();
   const [hasBiometrics, setHasBiometrics] = useState(false);
@@ -104,6 +111,21 @@ export default function SettingsScreen() {
                 title="Midnight"
                 onPress={() => setThemeMode('midnight')}
                 right={<RadioDot selected={themeMode === 'midnight'} color="$red9" />}
+              />
+              <SettingsItem
+                icon={<Clock size={20} color="$gray10" />}
+                title="Auto"
+                onPress={() => setThemeMode('auto')}
+                right={
+                  <XStack alignItems="center" gap="$2">
+                    {themeMode === 'auto' && (
+                      <Text color="$gray10" fontSize="$3" fontFamily="$body">
+                        {RESOLVED_THEME_LABEL[resolvedTheme]}
+                      </Text>
+                    )}
+                    <RadioDot selected={themeMode === 'auto'} />
+                  </XStack>
+                }
               />
             </SettingsGroup>
 

@@ -170,29 +170,78 @@ export function NoteList({
     const hasImage = !!item.imageUri;
 
     return (
-      <Swipeable
-        renderRightActions={() => renderRightActions(item.id)}
-        overshootRight={false}
+      <YStack
+        borderRadius={20}
+        overflow="hidden"
+        marginBottom="$2"
+        width="100%"
       >
-        <Link href={`/view-dream?dreamId=${item.id}`} asChild>
-          <YStack
-            backgroundColor="$backgroundStrong"
-            borderRadius={20}
-            marginBottom="$2"
-            overflow="hidden"
-            width="100%"
-          >
-            {hasImage ? (
-              <View style={styles.imageCard}>
-                <Image
-                  source={{ uri: item.imageUri! }}
-                  style={styles.cardImage}
-                />
-                <LinearGradient
-                  colors={['transparent', 'rgba(4,14,31,0.7)', 'rgba(4,14,31,0.95)']}
-                  style={styles.imageOverlay}
-                />
-                <YStack style={styles.imageContent} padding="$4" gap="$2">
+        <Swipeable
+          renderRightActions={() => renderRightActions(item.id)}
+          overshootRight={false}
+        >
+          <Link href={`/view-dream?dreamId=${item.id}`} asChild>
+            <YStack
+              backgroundColor="$backgroundStrong"
+              width="100%"
+            >
+              {hasImage ? (
+                <View style={styles.imageCard}>
+                  <Image
+                    source={{ uri: item.imageUri! }}
+                    style={styles.cardImage}
+                  />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(4,14,31,0.7)', 'rgba(4,14,31,0.95)']}
+                    style={styles.imageOverlay}
+                  />
+                  <YStack style={styles.imageContent} padding="$4" gap="$2">
+                    <Text
+                      fontSize="$1"
+                      color="$gray8"
+                      fontFamily="$body"
+                      letterSpacing={1}
+                      textTransform="uppercase"
+                    >
+                      {timeString}
+                    </Text>
+                    <Text
+                      fontFamily="$heading"
+                      fontSize="$6"
+                      lineHeight={28}
+                      color="$color"
+                      numberOfLines={3}
+                    >
+                      {truncatedContent}
+                    </Text>
+                    {item.tags && item.tags.length > 0 && (
+                      <XStack flexWrap="wrap" gap="$2" marginTop="$1">
+                        {item.tags.map(tag => (
+                          <XStack
+                            key={tag.id}
+                            backgroundColor="$gray6"
+                            borderRadius={9999}
+                            paddingHorizontal="$3"
+                            paddingVertical="$1.5"
+                          >
+                            <Text
+                              fontSize={10}
+                              fontFamily="$body"
+                              fontWeight="500"
+                              letterSpacing={1}
+                              textTransform="uppercase"
+                              color="$gray10"
+                            >
+                              {tag.name}
+                            </Text>
+                          </XStack>
+                        ))}
+                      </XStack>
+                    )}
+                  </YStack>
+                </View>
+              ) : (
+                <YStack padding="$4" gap="$2">
                   <Text
                     fontSize="$1"
                     color="$gray8"
@@ -204,8 +253,8 @@ export function NoteList({
                   </Text>
                   <Text
                     fontFamily="$heading"
-                    fontSize="$6"
-                    lineHeight={28}
+                    fontSize="$5"
+                    lineHeight={26}
                     color="$color"
                     numberOfLines={3}
                   >
@@ -236,56 +285,11 @@ export function NoteList({
                     </XStack>
                   )}
                 </YStack>
-              </View>
-            ) : (
-              <YStack padding="$4" gap="$2">
-                <Text
-                  fontSize="$1"
-                  color="$gray8"
-                  fontFamily="$body"
-                  letterSpacing={1}
-                  textTransform="uppercase"
-                >
-                  {timeString}
-                </Text>
-                <Text
-                  fontFamily="$heading"
-                  fontSize="$5"
-                  lineHeight={26}
-                  color="$color"
-                  numberOfLines={3}
-                >
-                  {truncatedContent}
-                </Text>
-                {item.tags && item.tags.length > 0 && (
-                  <XStack flexWrap="wrap" gap="$2" marginTop="$1">
-                    {item.tags.map(tag => (
-                      <XStack
-                        key={tag.id}
-                        backgroundColor="$gray6"
-                        borderRadius={9999}
-                        paddingHorizontal="$3"
-                        paddingVertical="$1.5"
-                      >
-                        <Text
-                          fontSize={10}
-                          fontFamily="$body"
-                          fontWeight="500"
-                          letterSpacing={1}
-                          textTransform="uppercase"
-                          color="$gray10"
-                        >
-                          {tag.name}
-                        </Text>
-                      </XStack>
-                    ))}
-                  </XStack>
-                )}
-              </YStack>
-            )}
-          </YStack>
-        </Link>
-      </Swipeable>
+              )}
+            </YStack>
+          </Link>
+        </Swipeable>
+      </YStack>
     );
   }, [renderRightActions]);
 
