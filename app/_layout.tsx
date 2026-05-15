@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { TamaguiProvider, Theme, YStack } from 'tamagui';
 import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Plus } from '@tamagui/lucide-icons';
@@ -143,6 +144,10 @@ function RootLayoutInner() {
   );
 }
 
+// Keep the native splash visible until the JS layer is ready, so the user
+// doesn't see a blank screen while fonts load.
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   const [loaded] = useFonts({
     // Plus Jakarta Sans (body/UI font)
@@ -155,6 +160,12 @@ export default function RootLayout() {
     NotoSerif_400Regular: require('@expo-google-fonts/noto-serif/400Regular/NotoSerif_400Regular.ttf'),
     NotoSerif_700Bold: require('@expo-google-fonts/noto-serif/700Bold/NotoSerif_700Bold.ttf'),
   });
+
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
 
   if (!loaded) {
     return null;

@@ -7,7 +7,10 @@ let db: DB | null = null;
 
 export function initDatabase(encryptionKey: string): void {
   if (db) return;
-  db = open({ name: 'dreams.db', encryptionKey });
+  // Pass the key in SQLCipher raw-key format (x'<64 hex>') so SQLCipher uses it
+  // directly instead of running 256k PBKDF2 iterations on every cold start.
+  // The key from generateRandomKey() is always 32 bytes / 64 hex chars.
+  db = open({ name: 'dreams.db', encryptionKey: `x'${encryptionKey}'` });
   createSchema();
   runMigrations(db);
 }
