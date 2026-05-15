@@ -111,3 +111,33 @@ export function getDividerColor(theme: string): string {
       return 'rgba(33,72,125,0.15)';
   }
 }
+
+/**
+ * Colors for the top scroll fade gradient: [opaque BG color, transparent].
+ * Matches the brighter half of AtmosphericBackground's gradient.
+ */
+export function getBgFadeTopColors(theme: string): [string, string] {
+  switch (theme) {
+    case 'midnight':
+      return ['hsl(0, 20%, 5%)', 'hsla(0, 20%, 5%, 0)'];
+    case 'light':
+      return ['#fdf6f4', '#fdf6f400'];
+    default:
+      return ['#001938', '#00193800'];
+  }
+}
+
+/**
+ * Colors for the bottom scroll fade gradient: [transparent, opaque BG color].
+ * Matches the darker half of AtmosphericBackground's gradient.
+ */
+export function getBgFadeBottomColors(theme: string): [string, string] {
+  switch (theme) {
+    case 'midnight':
+      return ['hsla(0, 25%, 3%, 0)', 'hsl(0, 25%, 3%)'];
+    case 'light':
+      return ['#f8eeeb00', '#f8eeeb'];
+    default:
+      return ['#040e1f00', '#040e1f'];
+  }
+}

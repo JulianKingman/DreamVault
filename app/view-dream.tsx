@@ -24,7 +24,8 @@ import { AtmosphericBackground } from '../components/AtmosphericBackground';
 import { GlassCard } from '../components/GlassCard';
 import { useDebouncedEffect } from '../hooks/useDebouncedEffect';
 import { useTheme } from '../contexts/ThemeContext';
-import { getTextColor, getPlaceholderColor, getDividerColor } from '../utils/themeColors';
+import { getTextColor, getPlaceholderColor, getDividerColor, getBgFadeTopColors, getBgFadeBottomColors } from '../utils/themeColors';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const VIEW_DREAM_DONE_BAR = 'view-dream-done';
 
@@ -53,6 +54,8 @@ export default function ViewDreamScreen() {
       text: getTextColor(resolvedTheme),
       placeholder: getPlaceholderColor(resolvedTheme),
       divider: getDividerColor(resolvedTheme),
+      topFade: getBgFadeTopColors(resolvedTheme),
+      bottomFade: getBgFadeBottomColors(resolvedTheme),
     }),
     [resolvedTheme],
   );
@@ -280,12 +283,13 @@ export default function ViewDreamScreen() {
           </Button>
         </XStack>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          automaticallyAdjustKeyboardInsets
-          keyboardDismissMode="interactive"
-        >
+        <View style={styles.scrollWrapper}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            automaticallyAdjustKeyboardInsets
+            keyboardDismissMode="interactive"
+          >
           {isEditing ? (
             // Edit mode
             <YStack padding="$5" gap="$4">
@@ -517,7 +521,19 @@ export default function ViewDreamScreen() {
               />
             </YStack>
           )}
-        </ScrollView>
+          </ScrollView>
+          {/* Top and bottom fade gradients over the scroll area. */}
+          <LinearGradient
+            colors={themeColors.topFade}
+            pointerEvents="none"
+            style={styles.topFade}
+          />
+          <LinearGradient
+            colors={themeColors.bottomFade}
+            pointerEvents="none"
+            style={styles.bottomFade}
+          />
+        </View>
 
         {/* Floating bottom action bar */}
         {!isEditing && (
@@ -627,8 +643,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  scrollWrapper: {
+    flex: 1,
+  },
   scrollContent: {
     paddingBottom: 120,
+  },
+  topFade: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 24,
+  },
+  bottomFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
   },
   dateLine: {
     height: 1,

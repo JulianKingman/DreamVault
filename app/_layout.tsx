@@ -82,14 +82,18 @@ function RootLayoutInner() {
         : TwilightNavTheme;
 
   if (!isAuthenticated) {
-    // If auth is disabled, AuthProvider auto-authenticates silently — show the
-    // privacy overlay (branded splash) instead of the Lock UI for that brief
-    // moment so the user doesn't see a "Authenticate" screen they don't need.
+    // If Face ID is disabled, AuthProvider auto-authenticates silently — render
+    // just the theme background (no lock icon, no text) so it doesn't look like
+    // a lock screen during that brief window.
     return (
       <TamaguiProvider config={config} defaultTheme={resolvedTheme}>
         <ThemeProvider value={navTheme}>
           <Theme name={resolvedTheme}>
-            {isAuthEnabled ? <LockScreen /> : <PrivacyOverlay />}
+            {isAuthEnabled ? (
+              <LockScreen />
+            ) : (
+              <YStack flex={1} backgroundColor="$background" />
+            )}
           </Theme>
         </ThemeProvider>
       </TamaguiProvider>

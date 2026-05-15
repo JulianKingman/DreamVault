@@ -37,6 +37,8 @@ import {
   getTextColor,
   getPlaceholderColor,
   getDividerColor,
+  getBgFadeTopColors,
+  getBgFadeBottomColors,
 } from '../utils/themeColors';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -81,6 +83,8 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
       text: getTextColor(resolvedTheme),
       placeholder: getPlaceholderColor(resolvedTheme),
       divider: getDividerColor(resolvedTheme),
+      topFade: getBgFadeTopColors(resolvedTheme),
+      bottomFade: getBgFadeBottomColors(resolvedTheme),
     }),
     [resolvedTheme],
   );
@@ -297,6 +301,7 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={80}
     >
+      <View style={styles.flex}>
       <ScrollView
         style={styles.flex}
         contentContainerStyle={styles.scrollContent}
@@ -616,6 +621,17 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
           )}
         </YStack>
       </ScrollView>
+        <LinearGradient
+          colors={themeColors.topFade}
+          pointerEvents="none"
+          style={styles.topFade}
+        />
+        <LinearGradient
+          colors={themeColors.bottomFade}
+          pointerEvents="none"
+          style={styles.bottomFade}
+        />
+      </View>
 
       {Platform.OS === 'ios' && (
         <InputAccessoryView nativeID={DONE_BAR_ID}>
@@ -682,6 +698,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  topFade: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 20,
+  },
+  bottomFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 36,
   },
   tagSuggestion: {
     paddingHorizontal: 12,

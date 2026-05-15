@@ -10,6 +10,12 @@ import { useDreams } from '@/hooks/useDreams';
 import { deleteDream, getIntentionsForDates } from '@/utils/database';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Alert } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
+import { getBgFadeTopColors, getBgFadeBottomColors } from '../utils/themeColors';
+
+// Heights of the fade gradients at the edges of the scroll content.
+const TOP_FADE_EXTRA = 32;
+const BOTTOM_FADE_HEIGHT = 140; // enough to cover the floating tab bar area
 
 interface NoteListProps {
   favoritesOnly?: boolean;
@@ -49,6 +55,9 @@ export function NoteList({
   const { dreams, dataVersion } = useDreams({ search: searchTerm, favoritesOnly });
   const searchRef = useRef<TextInput>(null);
   const insets = useSafeAreaInsets();
+  const { resolvedTheme } = useTheme();
+  const topFadeColors = useMemo(() => getBgFadeTopColors(resolvedTheme), [resolvedTheme]);
+  const bottomFadeColors = useMemo(() => getBgFadeBottomColors(resolvedTheme), [resolvedTheme]);
 
   // Re-focus the search input each time this tab/screen becomes focused,
   // not just on first mount.
@@ -328,27 +337,57 @@ export function NoteList({
   const listFooter = showBuiltInSearch && searchPosition === 'bottom' ? searchInput : null;
 
   return (
-    <SectionList
-      sections={sections}
-      keyExtractor={(item: Dream) => `dream-${item.id}`}
-      renderItem={renderItem}
-      renderSectionHeader={renderSectionHeader}
-      contentContainerStyle={[
-        styles.listContent,
-        { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 180 },
-      ]}
-      ListHeaderComponent={listHeader}
-      ListFooterComponent={listFooter}
-      onScroll={onScroll}
-      scrollEventThrottle={16}
-      stickySectionHeadersEnabled={false}
-    />
+    <View style={styles.flex}>
+      <SectionList
+        sections={sections}
+        keyExtractor={(item: Dream) => `dream-${item.id}`}
+        renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 180 },
+        ]}
+        ListHeaderComponent={listHeader}
+        ListFooterComponent={listFooter}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        stickySectionHeadersEnabled={false}
+      />
+      {/* Top fade — content scrolls under the status bar. Non-interactive. */}
+      <LinearGradient
+        colors={topFadeColors}
+        pointerEvents="none"
+        style={[styles.topFade, { height: insets.top + TOP_FADE_EXTRA }]}
+      />
+      {/* Bottom fade — content scrolls under the floating tab bar. */}
+      <LinearGradient
+        colors={bottomFadeColors}
+        pointerEvents="none"
+        style={[
+          styles.bottomFade,
+          { height: insets.bottom + BOTTOM_FADE_HEIGHT },
+        ]}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   listContent: {
     paddingHorizontal: 16,
+  },
+  topFade: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  bottomFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   imageCard: {
     minHeight: 320,
