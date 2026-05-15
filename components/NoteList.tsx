@@ -1,15 +1,15 @@
 import React, { useState, useCallback, useMemo, ReactElement, useRef } from 'react';
-import { StyleSheet, Image, View, TextInput, SectionList, Pressable } from 'react-native';
+import { StyleSheet, Image, View, TextInput, SectionList } from 'react-native';
 import { Text, YStack, XStack, Input, Button } from 'tamagui';
 import { Trash2, Compass } from '@tamagui/lucide-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Dream, Intention } from '../types';
-import { Link } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { useDreams } from '@/hooks/useDreams';
 import { deleteDream, getIntentionsForDates } from '@/utils/database';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Alert } from 'react-native';
-import { IntentionBottomSheet, type IntentionBottomSheetRef } from './IntentionBottomSheet';
 
 interface NoteListProps {
   favoritesOnly?: boolean;
@@ -48,7 +48,17 @@ export function NoteList({
   const searchTerm = externalSearch ?? internalSearch;
   const { dreams, dataVersion } = useDreams({ search: searchTerm, favoritesOnly });
   const searchRef = useRef<TextInput>(null);
-  const intentionSheetRef = useRef<IntentionBottomSheetRef>(null);
+  const insets = useSafeAreaInsets();
+
+  // Re-focus the search input each time this tab/screen becomes focused,
+  // not just on first mount.
+  useFocusEffect(
+    useCallback(() => {
+      if (!autoFocusSearch) return;
+      const t = setTimeout(() => searchRef.current?.focus(), 100);
+      return () => clearTimeout(t);
+    }, [autoFocusSearch]),
+  );
 
   // Group dreams by date and fetch intentions
   // Always include today's date so users can set an intention even with no dreams yet
@@ -118,10 +128,6 @@ export function NoteList({
     );
   }, [handleDelete]);
 
-  const openIntentionSheet = useCallback((section: DateSection) => {
-    intentionSheetRef.current?.open(section.dateKey, section.dateLabel, section.intention);
-  }, []);
-
   const renderSectionHeader = useCallback(({ section }: { section: DateSection }) => (
     <YStack paddingTop="$4" paddingBottom="$2" gap="$1">
       <Text
@@ -134,7 +140,7 @@ export function NoteList({
       >
         {section.dateLabel}
       </Text>
-      <Pressable onPress={() => openIntentionSheet(section)}>
+      {section.intention && (
         <XStack alignItems="center" gap="$1.5" marginTop="$1">
           <Compass size={12} color="$gray8" />
           <Text
@@ -143,13 +149,14 @@ export function NoteList({
             fontFamily="$body"
             fontStyle="italic"
             numberOfLines={1}
+            flex={1}
           >
-            {section.intention ? section.intention.content : 'Set intention...'}
+            {section.intention.content}
           </Text>
         </XStack>
-      </Pressable>
+      )}
     </YStack>
-  ), [openIntentionSheet]);
+  ), []);
 
   const renderItem = useCallback(({ item }: { item: Dream }) => {
     const timeString = item.dateCreated.toLocaleTimeString(undefined, {
@@ -303,7 +310,6 @@ export function NoteList({
       onChangeText={setInternalSearch}
       marginBottom={searchPosition === 'top' ? '$2' : undefined}
       marginTop={searchPosition === 'bottom' ? '$2' : undefined}
-      marginHorizontal="$4"
       borderRadius={9999}
       backgroundColor="$backgroundStrong"
       borderWidth={0}
@@ -322,28 +328,27 @@ export function NoteList({
   const listFooter = showBuiltInSearch && searchPosition === 'bottom' ? searchInput : null;
 
   return (
-    <>
-      <SectionList
-        sections={sections}
-        keyExtractor={(item: Dream) => `dream-${item.id}`}
-        renderItem={renderItem}
-        renderSectionHeader={renderSectionHeader}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={listHeader}
-        ListFooterComponent={listFooter}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        stickySectionHeadersEnabled={false}
-      />
-      <IntentionBottomSheet ref={intentionSheetRef} />
-    </>
+    <SectionList
+      sections={sections}
+      keyExtractor={(item: Dream) => `dream-${item.id}`}
+      renderItem={renderItem}
+      renderSectionHeader={renderSectionHeader}
+      contentContainerStyle={[
+        styles.listContent,
+        { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 180 },
+      ]}
+      ListHeaderComponent={listHeader}
+      ListFooterComponent={listFooter}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
+      stickySectionHeadersEnabled={false}
+    />
   );
 }
 
 const styles = StyleSheet.create({
   listContent: {
-    padding: 16,
-    paddingBottom: 180,
+    paddingHorizontal: 16,
   },
   imageCard: {
     minHeight: 320,

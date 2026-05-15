@@ -54,3 +54,60 @@ export function getDisabledGradient(theme: string): [string, string] {
       return ['#2e3c4f', '#1a2a3f'];
   }
 }
+
+/**
+ * Theme-aware primary text color — for TextInputs and other components that
+ * can't pick up `$color` from the Tamagui theme directly.
+ */
+export function getTextColor(theme: string): string {
+  switch (theme) {
+    case 'midnight':
+      return 'hsl(0, 50%, 40%)';
+    case 'light':
+      return '#2a1a15';
+    default:
+      return '#dae6ff';
+  }
+}
+
+/**
+ * Theme-aware placeholder text color for raw TextInputs.
+ */
+export function getPlaceholderColor(theme: string): string {
+  switch (theme) {
+    case 'midnight':
+      return 'hsl(0, 20%, 20%)';
+    case 'light':
+      return '#a08a82';
+    default:
+      return '#4e5c71';
+  }
+}
+
+/**
+ * Theme-aware muted/secondary text color (analogous to $gray10).
+ */
+export function getMutedColor(theme: string): string {
+  switch (theme) {
+    case 'midnight':
+      return 'hsl(0, 20%, 30%)';
+    case 'light':
+      return '#584a44';
+    default:
+      return '#909fb5';
+  }
+}
+
+/**
+ * Theme-aware subtle border color for input underlines / dividers.
+ */
+export function getDividerColor(theme: string): string {
+  switch (theme) {
+    case 'midnight':
+      return 'hsl(0, 25%, 10%)';
+    case 'light':
+      return 'rgba(160,120,110,0.15)';
+    default:
+      return 'rgba(33,72,125,0.15)';
+  }
+}

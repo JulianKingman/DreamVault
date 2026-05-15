@@ -58,16 +58,10 @@ export default function SettingsScreen() {
   }, []);
 
   const handleAuthToggle = async (enabled: boolean) => {
-    if (enabled) {
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Authenticate to enable Face ID',
-      });
-      if (result.success) {
-        setAuthEnabled(true);
-      }
-    } else {
-      setAuthEnabled(false);
-    }
+    // setAuthEnabled prompts for biometric verification and then re-stores
+    // the encryption key with the new keychain protection. Returns false if
+    // the user cancelled or no biometric is enrolled.
+    await setAuthEnabled(enabled);
   };
 
   const handleImportFromNotes = () => {
@@ -139,8 +133,11 @@ export default function SettingsScreen() {
                       size="$4"
                       checked={isAuthEnabled}
                       onCheckedChange={handleAuthToggle}
-                      native
-                    />
+                      backgroundColor={isAuthEnabled ? '$accentBackground' : '$gray6'}
+                      borderColor="$borderColor"
+                    >
+                      <Switch.Thumb backgroundColor="$color" />
+                    </Switch>
                   }
                 />
               </SettingsGroup>

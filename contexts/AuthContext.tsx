@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { getDbKey, createDbKey, hasDbKey } from '../utils/db-key';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { getDbKey, createDbKey, hasDbKey, setKeyProtection } from '../utils/db-key';
 import { initDatabase, closeDatabase } from '../utils/database';
 import { storage } from '../utils/storage';
 
@@ -20,7 +21,13 @@ interface AuthContextValue {
    * doesn't leak dream content.
    */
   isObscured: boolean;
-  setAuthEnabled: (enabled: boolean) => void;
+  /**
+   * Returns true on success. Toggling on prompts for biometric verification;
+   * toggling off prompts to read the auth-protected key and re-store it
+   * without protection. Returns false if the prompt was cancelled or no
+   * biometric is enrolled.
+   */
+  setAuthEnabled: (enabled: boolean) => Promise<boolean>;
   authenticate: () => Promise<AuthResult>;
 }
 
@@ -41,6 +48,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // the prev state at that moment is 'inactive', not 'background'.
   const wasBackgroundedRef = useRef(false);
 
+  // Read the preference through a ref so authenticate() doesn't need to be
+  // recreated (and re-fire its consumers' useEffect) whenever isAuthEnabled
+  // toggles in settings.
+  const isAuthEnabledRef = useRef(isAuthEnabled);
+  useEffect(() => {
+    isAuthEnabledRef.current = isAuthEnabled;
+  }, [isAuthEnabled]);
+
   const authenticate = useCallback(async (): Promise<AuthResult> => {
     if (isAuthenticating.current) {
       console.log('[Auth] Already authenticating, ignoring');
@@ -48,7 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     isAuthenticating.current = true;
     try {
-      console.log('[Auth] Starting authentication...');
+      const authRequired = isAuthEnabledRef.current;
+      console.log('[Auth] Starting authentication...', { authRequired });
       const keyExists = await hasDbKey();
       console.log('[Auth] Key exists:', keyExists);
 
@@ -56,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsFirstLaunch(true);
         console.log('[Auth] First launch, creating key...');
         try {
-          const key = await createDbKey();
+          const key = await createDbKey(authRequired);
           console.log('[Auth] Key created, initializing DB...');
           initDatabase(key);
           setIsAuthenticated(true);
@@ -70,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log('[Auth] Retrieving key...');
-      const key = await getDbKey();
+      const key = await getDbKey(authRequired);
       if (!key) {
         console.warn('[Auth] Key retrieval returned null');
         return { ok: false, reason: 'no-key' };
@@ -91,13 +107,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setAuthEnabled = (enabled: boolean) => {
+  const setAuthEnabled = useCallback(async (enabled: boolean): Promise<boolean> => {
+    if (enabled) {
+      // Verify with biometric before enabling, so we know it actually works.
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Authenticate to enable Face ID',
+      });
+      if (!result.success) return false;
+    }
+    const ok = await setKeyProtection(enabled);
+    if (!ok) return false;
     storage.set(AUTH_ENABLED_KEY, enabled);
     setIsAuthEnabledState(enabled);
-    if (!enabled) {
-      setIsAuthenticated(true);
+    return true;
+  }, []);
+
+  // If the user has Face ID disabled but we're not authenticated yet (e.g.
+  // cold start, returning from background), authenticate silently in the
+  // background so the LockScreen UI never needs to appear.
+  useEffect(() => {
+    if (!isAuthEnabled && !isAuthenticated && !isAuthenticating.current) {
+      authenticate();
     }
-  };
+  }, [isAuthEnabled, isAuthenticated, authenticate]);
 
   // Privacy overlay + re-lock when app returns from background.
   useEffect(() => {

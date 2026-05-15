@@ -5,7 +5,6 @@ const DB_KEY_FLAG = 'dream_locket_db_key_exists'; // non-protected existence che
 
 /**
  * Generate a random 256-bit hex key.
- * Uses crypto.getRandomValues if available, falls back to Math.random.
  */
 function generateRandomKey(): string {
   const bytes = new Uint8Array(32);
@@ -25,8 +24,6 @@ function generateRandomKey(): string {
 
 /**
  * Check if a DB key has been created (without triggering biometric prompt).
- * Uses a separate non-protected flag since the actual key may require
- * authentication to read.
  */
 export async function hasDbKey(): Promise<boolean> {
   try {
@@ -38,20 +35,26 @@ export async function hasDbKey(): Promise<boolean> {
 }
 
 /**
- * Retrieve the DB encryption key, requiring biometric authentication.
- * Falls back to unprotected retrieval if requireAuthentication fails
- * (e.g. simulator with no passcode).
- * Returns null if the user cancels.
+ * Retrieve the DB encryption key. If `requireAuth` is true, biometric auth
+ * is required; otherwise the key is read silently (works when the key was
+ * stored without an auth ACL).
  */
-export async function getDbKey(): Promise<string | null> {
+export async function getDbKey(requireAuth: boolean = true): Promise<string | null> {
+  if (!requireAuth) {
+    try {
+      return await SecureStore.getItemAsync(DB_KEY_ALIAS);
+    } catch {
+      return null;
+    }
+  }
   try {
-    const key = await SecureStore.getItemAsync(DB_KEY_ALIAS, {
+    return await SecureStore.getItemAsync(DB_KEY_ALIAS, {
       requireAuthentication: true,
       authenticationPrompt: 'Unlock Dream Locket',
     });
-    return key;
   } catch {
-    // requireAuthentication not supported (no passcode/biometric)
+    // Fall back to non-auth read in case the item isn't actually protected
+    // (e.g. simulator with no biometrics).
     try {
       return await SecureStore.getItemAsync(DB_KEY_ALIAS);
     } catch {
@@ -61,30 +64,84 @@ export async function getDbKey(): Promise<string | null> {
 }
 
 /**
- * Generate and store a new DB encryption key.
- * Tries biometric-protected storage; falls back to plain SecureStore.
- * Also stores a non-protected flag for hasDbKey() checks.
+ * Generate and store a new DB encryption key with the requested protection.
+ * Falls back to non-protected storage if the protected store fails
+ * (e.g. no enrolled biometric).
  */
-export async function createDbKey(): Promise<string> {
+export async function createDbKey(authRequired: boolean = false): Promise<string> {
   const key = generateRandomKey();
-  console.log('[db-key] Generated key, attempting to store...');
+  console.log('[db-key] Generated key, attempting to store...', { authRequired });
 
-  try {
-    await SecureStore.setItemAsync(DB_KEY_ALIAS, key, {
-      requireAuthentication: true,
-      authenticationPrompt: 'Set up Dream Locket encryption',
-    });
-    console.log('[db-key] Stored with auth protection');
-  } catch (e) {
-    console.log('[db-key] Auth storage failed, falling back:', e);
+  if (authRequired) {
+    try {
+      await SecureStore.setItemAsync(DB_KEY_ALIAS, key, {
+        requireAuthentication: true,
+        authenticationPrompt: 'Set up Dream Locket encryption',
+      });
+      console.log('[db-key] Stored with auth protection');
+    } catch (e) {
+      console.log('[db-key] Auth storage failed, falling back:', e);
+      await SecureStore.setItemAsync(DB_KEY_ALIAS, key);
+    }
+  } else {
     await SecureStore.setItemAsync(DB_KEY_ALIAS, key);
     console.log('[db-key] Stored without auth protection');
   }
 
-  // Store non-protected flag so hasDbKey() works without triggering biometric
+  // Non-protected flag so hasDbKey() works without biometric.
   await SecureStore.setItemAsync(DB_KEY_FLAG, '1');
 
   return key;
+}
+
+/**
+ * Re-store the DB key with a different protection level. Reads the current
+ * key (will trigger biometric if currently auth-protected), then re-stores
+ * with the requested protection. Returns false if the read failed or the
+ * user cancelled.
+ */
+export async function setKeyProtection(authRequired: boolean): Promise<boolean> {
+  // Try the silent (no-auth) read first — succeeds if currently unprotected.
+  let key: string | null = null;
+  try {
+    key = await SecureStore.getItemAsync(DB_KEY_ALIAS);
+  } catch {
+    /* item likely has biometric ACL; will fall through to auth read */
+  }
+  if (!key) {
+    try {
+      key = await SecureStore.getItemAsync(DB_KEY_ALIAS, {
+        requireAuthentication: true,
+        authenticationPrompt: 'Authenticate to update Face ID setting',
+      });
+    } catch {
+      return false;
+    }
+  }
+  if (!key) return false;
+
+  try {
+    await SecureStore.deleteItemAsync(DB_KEY_ALIAS);
+    if (authRequired) {
+      try {
+        await SecureStore.setItemAsync(DB_KEY_ALIAS, key, {
+          requireAuthentication: true,
+          authenticationPrompt: 'Unlock Dream Locket',
+        });
+      } catch {
+        // No biometric enrolled — restore without protection so we don't
+        // lock the user out.
+        await SecureStore.setItemAsync(DB_KEY_ALIAS, key);
+        return false;
+      }
+    } else {
+      await SecureStore.setItemAsync(DB_KEY_ALIAS, key);
+    }
+    return true;
+  } catch (e) {
+    console.error('[db-key] Failed to update key protection:', e);
+    return false;
+  }
 }
 
 /**

@@ -1,14 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, Alert, ScrollView, View, Share, TextInput, AppState, AppStateStatus } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  View,
+  Share,
+  TextInput,
+  AppState,
+  AppStateStatus,
+  InputAccessoryView,
+  Platform,
+  Pressable,
+  Keyboard,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { YStack, Text, Input, Button, XStack } from 'tamagui';
-import { getDreamById, updateDream, toggleFavorite, deleteDream, setDreamTags, getAllTags, getIntentionForDate } from '../utils/database';
+import { getDreamById, updateDream, toggleFavorite, deleteDream, setDreamTags, getAllTags, getIntentionForDate, setIntention } from '../utils/database';
 import type { Dream, Intention, Tag } from '../types';
 import { Bookmark, Trash2, X, Edit3, Share2, ChevronLeft, Compass, Check } from '@tamagui/lucide-icons';
 import { AIInsights } from '../components/AIInsights';
 import { AtmosphericBackground } from '../components/AtmosphericBackground';
 import { GlassCard } from '../components/GlassCard';
 import { useDebouncedEffect } from '../hooks/useDebouncedEffect';
+import { useTheme } from '../contexts/ThemeContext';
+import { getTextColor, getPlaceholderColor, getDividerColor } from '../utils/themeColors';
+
+const VIEW_DREAM_DONE_BAR = 'view-dream-done';
 
 function formatDateKey(date: Date): string {
   const y = date.getFullYear();
@@ -22,12 +40,22 @@ export default function ViewDreamScreen() {
   const router = useRouter();
   const [dream, setDream] = useState<Dream | null>(null);
   const [intention, setIntentionState] = useState<Intention | null>(null);
+  const [editedIntention, setEditedIntention] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [editedNotes, setEditedNotes] = useState('');
   const [editedTags, setEditedTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [allTags, setAllTags] = useState<Tag[]>([]);
+  const { resolvedTheme } = useTheme();
+  const themeColors = useMemo(
+    () => ({
+      text: getTextColor(resolvedTheme),
+      placeholder: getPlaceholderColor(resolvedTheme),
+      divider: getDividerColor(resolvedTheme),
+    }),
+    [resolvedTheme],
+  );
 
   useEffect(() => {
     if (dreamId) {
@@ -39,7 +67,9 @@ export default function ViewDreamScreen() {
         setEditedTags(fetched.tags?.map(t => t.name) ?? []);
         // Fetch intention for this dream's date
         const dateKey = formatDateKey(fetched.dateCreated);
-        setIntentionState(getIntentionForDate(dateKey));
+        const fetchedIntention = getIntentionForDate(dateKey);
+        setIntentionState(fetchedIntention);
+        setEditedIntention(fetchedIntention?.content ?? '');
       }
     }
     setAllTags(getAllTags());
@@ -50,8 +80,25 @@ export default function ViewDreamScreen() {
     setEditedContent(dream.content);
     setEditedNotes(dream.notes ?? '');
     setEditedTags(dream.tags?.map(t => t.name) ?? []);
+    setEditedIntention(intention?.content ?? '');
     setIsEditing(true);
   };
+
+  // Auto-save intention (per-day, debounced) while editing.
+  useDebouncedEffect(
+    () => {
+      if (!isEditing || !dream) return;
+      const dateKey = formatDateKey(dream.dateCreated);
+      const trimmed = editedIntention.trim();
+      const current = intention?.content ?? '';
+      if (trimmed === current.trim()) return;
+      // setIntention upserts; empty content deletes
+      const updated = setIntention(dateKey, trimmed);
+      setIntentionState(trimmed ? updated : null);
+    },
+    [editedIntention, isEditing, dream, intention],
+    300,
+  );
 
   // --- Auto-save while editing ---
   //
@@ -218,35 +265,57 @@ export default function ViewDreamScreen() {
     <View style={styles.container}>
       <AtmosphericBackground />
       <SafeAreaView style={styles.container}>
+        {/* Stable header — always visible, sits above the scroll content. */}
+        <XStack paddingHorizontal="$4" paddingTop="$2" paddingBottom="$2">
+          <Button
+            unstyled
+            onPress={() => router.back()}
+            pressStyle={{ opacity: 0.7 }}
+            paddingVertical="$2"
+          >
+            <XStack alignItems="center" gap="$1">
+              <ChevronLeft size={20} color="$gray10" />
+              <Text color="$gray10" fontFamily="$body" fontSize="$3">Back</Text>
+            </XStack>
+          </Button>
+        </XStack>
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets
+          keyboardDismissMode="interactive"
         >
-          {/* Back button */}
-          <XStack paddingHorizontal="$4" paddingTop="$2">
-            <Button
-              unstyled
-              onPress={() => router.back()}
-              pressStyle={{ opacity: 0.7 }}
-              paddingVertical="$2"
-            >
-              <XStack alignItems="center" gap="$1">
-                <ChevronLeft size={20} color="$gray10" />
-                <Text color="$gray10" fontFamily="$body" fontSize="$3">Back</Text>
-              </XStack>
-            </Button>
-          </XStack>
-
           {isEditing ? (
             // Edit mode
             <YStack padding="$5" gap="$4">
+              {/* Intention — per-day, auto-saves on type */}
+              <YStack gap="$2">
+                <XStack alignItems="center" gap="$1.5">
+                  <Compass size={12} color="$gray10" />
+                  <Text fontSize="$2" color="$gray10" fontFamily="$body" letterSpacing={1.5} textTransform="uppercase">
+                    Intention for {dateString.split(',').slice(0, 2).join(',')}
+                  </Text>
+                </XStack>
+                <TextInput
+                  style={[styles.editField, { color: themeColors.text, borderBottomColor: themeColors.divider, fontStyle: 'italic' }]}
+                  value={editedIntention}
+                  onChangeText={setEditedIntention}
+                  placeholder="What was your intention before sleep?"
+                  placeholderTextColor={themeColors.placeholder}
+                  inputAccessoryViewID={VIEW_DREAM_DONE_BAR}
+                  multiline
+                />
+              </YStack>
+
               <TextInput
-                style={styles.editContent}
+                style={[styles.editContent, { color: themeColors.text }]}
                 multiline
                 value={editedContent}
                 onChangeText={setEditedContent}
                 placeholder="Dream content..."
-                placeholderTextColor="#4e5c71"
+                placeholderTextColor={themeColors.placeholder}
+                inputAccessoryViewID={VIEW_DREAM_DONE_BAR}
               />
 
               <YStack gap="$2">
@@ -254,12 +323,13 @@ export default function ViewDreamScreen() {
                   Notes and Interpretation
                 </Text>
                 <TextInput
-                  style={[styles.editField, { minHeight: 80 }]}
+                  style={[styles.editField, { minHeight: 80, color: themeColors.text, borderBottomColor: themeColors.divider }]}
                   multiline
                   value={editedNotes}
                   onChangeText={setEditedNotes}
                   placeholder="Any additional thoughts..."
-                  placeholderTextColor="#4e5c71"
+                  placeholderTextColor={themeColors.placeholder}
+                  inputAccessoryViewID={VIEW_DREAM_DONE_BAR}
                 />
               </YStack>
 
@@ -269,11 +339,12 @@ export default function ViewDreamScreen() {
                   Vibes
                 </Text>
                 <TextInput
-                  style={styles.editField}
+                  style={[styles.editField, { color: themeColors.text, borderBottomColor: themeColors.divider }]}
                   value={tagInput}
                   onChangeText={setTagInput}
                   placeholder="Add vibes..."
-                  placeholderTextColor="#4e5c71"
+                  placeholderTextColor={themeColors.placeholder}
+                  inputAccessoryViewID={VIEW_DREAM_DONE_BAR}
                   onSubmitEditing={() => {
                     if (tagInput.trim()) addTag(tagInput);
                   }}
@@ -526,6 +597,23 @@ export default function ViewDreamScreen() {
           </View>
         )}
       </SafeAreaView>
+
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={VIEW_DREAM_DONE_BAR}>
+          <View
+            style={[
+              styles.doneBar,
+              { borderTopColor: themeColors.divider },
+            ]}
+          >
+            <Pressable onPress={() => Keyboard.dismiss()} hitSlop={8}>
+              <Text color="$accentBackground" fontWeight="600" fontSize="$4" fontFamily="$body">
+                Done
+              </Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      )}
     </View>
   );
 }
@@ -562,7 +650,6 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_400Regular',
     fontSize: 16,
     lineHeight: 24,
-    color: '#dae6ff',
     minHeight: 200,
     textAlignVertical: 'top',
   },
@@ -570,9 +657,15 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_400Regular',
     fontSize: 15,
     lineHeight: 22,
-    color: '#dae6ff',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(33,72,125,0.15)',
     paddingVertical: 8,
+  },
+  doneBar: {
+    backgroundColor: 'rgba(20,20,20,0.92)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
 });

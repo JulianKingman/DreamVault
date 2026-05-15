@@ -1,5 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ScrollView, StyleSheet, TextInput, View, KeyboardAvoidingView, Platform, Pressable, AppState, AppStateStatus } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  AppState,
+  AppStateStatus,
+  InputAccessoryView,
+  Keyboard,
+} from 'react-native';
 import { Button, YStack, XStack, Text, Spinner } from 'tamagui';
 import { X, Sparkles, Check } from '@tamagui/lucide-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,7 +32,20 @@ import type { Tag as TagType } from '../types';
 import { useAI } from '../hooks/useAI';
 import { GlassCard } from './GlassCard';
 import { useDebouncedEffect } from '../hooks/useDebouncedEffect';
+import { useTheme } from '../contexts/ThemeContext';
+import {
+  getTextColor,
+  getPlaceholderColor,
+  getDividerColor,
+} from '../utils/themeColors';
 import DateTimePicker from '@react-native-community/datetimepicker';
+
+const DONE_BAR_ID = 'dream-form-done';
+const DEFAULT_VIBES = [
+  'lucid', 'nightmare', 'recurring', 'flying', 'falling',
+  'chasing', 'water', 'animals', 'people', 'places',
+  'surreal', 'vivid', 'peaceful', 'anxious', 'prophetic',
+];
 
 interface NewDreamFormProps {
   isFavorite?: boolean;
@@ -50,6 +75,15 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
   const contentRef = useRef<TextInput>(null);
   const router = useRouter();
   const { available: aiAvailable, suggestTags: aiSuggestTags } = useAI();
+  const { resolvedTheme } = useTheme();
+  const themeColors = useMemo(
+    () => ({
+      text: getTextColor(resolvedTheme),
+      placeholder: getPlaceholderColor(resolvedTheme),
+      divider: getDividerColor(resolvedTheme),
+    }),
+    [resolvedTheme],
+  );
 
   // Auto-save state
   const [dreamId, setDreamId] = useState<number | null>(null);
@@ -88,7 +122,13 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
   }, []);
 
   useEffect(() => {
-    setRecentTags(getRecentTags(15));
+    // Seed common vibes if the user has none yet, so the Recent row isn't empty.
+    let recent = getRecentTags(15);
+    if (recent.length === 0) {
+      for (const name of DEFAULT_VIBES) getOrCreateTag(name);
+      recent = getRecentTags(15);
+    }
+    setRecentTags(recent);
     setTimeout(() => contentRef.current?.focus(), 300);
   }, []);
 
@@ -262,6 +302,8 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="interactive"
       >
         {/* Date + Time picker */}
         <YStack paddingHorizontal={24}>
@@ -308,11 +350,12 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
             Intention
           </Text>
           <TextInput
-            style={styles.secondaryInput}
+            style={[styles.secondaryInput, { color: themeColors.text, borderBottomColor: themeColors.divider }]}
             placeholder="What was your intention before sleep?"
-            placeholderTextColor="#4e5c71"
+            placeholderTextColor={themeColors.placeholder}
             value={intention}
             onChangeText={setIntentionText}
+            inputAccessoryViewID={DONE_BAR_ID}
           />
         </YStack>
 
@@ -331,13 +374,14 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
           <GlassCard style={styles.glassCard} padding="$4">
             <TextInput
               ref={contentRef}
-              style={styles.glassInput}
+              style={[styles.glassInput, { color: themeColors.text }]}
               multiline
               placeholder="Describe your dream..."
-              placeholderTextColor="#4e5c71"
+              placeholderTextColor={themeColors.placeholder}
               value={content}
               onChangeText={setContent}
               textAlignVertical="top"
+              inputAccessoryViewID={DONE_BAR_ID}
             />
           </GlassCard>
         </YStack>
@@ -356,13 +400,14 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
           </Text>
           <GlassCard style={styles.glassCard} padding="$4">
             <TextInput
-              style={[styles.glassInput, styles.notesInput]}
+              style={[styles.glassInput, styles.notesInput, { color: themeColors.text }]}
               multiline
               placeholder="Record the deeper resonance..."
-              placeholderTextColor="#4e5c71"
+              placeholderTextColor={themeColors.placeholder}
               value={notes}
               onChangeText={setNotes}
               textAlignVertical="top"
+              inputAccessoryViewID={DONE_BAR_ID}
             />
           </GlassCard>
         </YStack>
@@ -413,15 +458,16 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
 
           {/* Tag search input */}
           <TextInput
-            style={styles.tagInput}
+            style={[styles.tagInput, { color: themeColors.text, borderBottomColor: themeColors.divider }]}
             placeholder="Search or add vibes..."
-            placeholderTextColor="#4e5c71"
+            placeholderTextColor={themeColors.placeholder}
             value={tagQuery}
             onChangeText={setTagQuery}
             onSubmitEditing={() => {
               if (tagQuery.trim()) addTag(tagQuery);
             }}
             returnKeyType="done"
+            inputAccessoryViewID={DONE_BAR_ID}
           />
 
           {/* Search results */}
@@ -570,6 +616,23 @@ export function NewDreamForm({ isFavorite = false }: NewDreamFormProps) {
           )}
         </YStack>
       </ScrollView>
+
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={DONE_BAR_ID}>
+          <View
+            style={[
+              styles.doneBar,
+              { borderTopColor: themeColors.divider },
+            ]}
+          >
+            <Pressable onPress={() => Keyboard.dismiss()} hitSlop={8}>
+              <Text color="$accentBackground" fontWeight="600" fontSize="$4" fontFamily="$body">
+                Done
+              </Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -592,16 +655,13 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_400Regular',
     fontSize: 16,
     lineHeight: 24,
-    color: '#dae6ff',
     minHeight: 150,
   },
   secondaryInput: {
     fontFamily: 'PlusJakartaSans_400Regular',
     fontSize: 15,
     lineHeight: 22,
-    color: '#dae6ff',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(33,72,125,0.15)',
     paddingVertical: 8,
   },
   notesInput: {
@@ -612,10 +672,16 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_400Regular',
     fontSize: 15,
     lineHeight: 22,
-    color: '#dae6ff',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(33,72,125,0.15)',
     paddingVertical: 8,
+  },
+  doneBar: {
+    backgroundColor: 'rgba(20,20,20,0.92)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   tagSuggestion: {
     paddingHorizontal: 12,

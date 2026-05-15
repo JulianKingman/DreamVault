@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, StyleSheet, TextInput, Keyboard, Platform } from 'react-native';
+import { View, StyleSheet, TextInput, Keyboard, Platform } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { XStack } from 'tamagui';
@@ -64,9 +64,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <AtmosphericBackground />
-      <SafeAreaView style={styles.container}>
-        <NoteList externalSearch={searchTerm} />
-      </SafeAreaView>
+      <NoteList externalSearch={searchTerm} />
 
       {/* Search bar — matches NoteList horizontal padding (16), sits above tab bar */}
       <Animated.View style={[styles.searchBar, animatedStyle]}>
