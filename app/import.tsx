@@ -20,7 +20,7 @@ import {
   Lightbulb,
 } from '@tamagui/lucide-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import { parseImportFile, type FileParseResult, type ParseOptions } from '../utils/import-parser';
 import { findImportByHash, type ImportRecord } from '../utils/database';
